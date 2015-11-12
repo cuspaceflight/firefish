@@ -17,3 +17,5 @@ To re-generate the STL file, run it through ``openscad``:
 $ openscad -o cartoon-rocket.stl cartoon-rocket.scad
 ```
 
+Alternatively the provided ``Makefile`` will run the command for you.
+
