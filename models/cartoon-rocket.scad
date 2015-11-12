@@ -1,11 +1,11 @@
-// design values
-body_height = 1;
-body_diameter = 0.1;
+// design values - length units are mm
+body_height = 1000;
+body_diameter = 100;
 fin_count=3;
 
 // number of flat facets to use to represent a
 // cylinder
-resolution = 100;
+resolution = 25;
 
 // values derived from above which can be tweaked
 cone_height = 3*body_diameter;
