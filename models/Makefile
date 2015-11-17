@@ -20,7 +20,7 @@ all: cartoon-rocket.domain.msh
 	$(GMSH) -format msh -check -o "$@" "$<" -3
 
 %.stl : %.scad
-	$(OPENSCAD) -m "$@" "$<"
+	$(OPENSCAD) -o "$@" "$<"
 
 # Note that netgen sometimes segfaults after generating mesh. Work around this
 # by ignoring exit code
