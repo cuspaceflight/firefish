@@ -16,6 +16,10 @@ endif
 .PHONY: all
 all: cartoon-rocket.domain.msh
 
+.PHONY: clean
+clean:
+	rm -f cartoon-rocket.domain.msh
+
 %.domain.msh: %.domain.geo %.meshed.surface.stl
 	$(GMSH) -format msh -check -o "$@" "$<" -3
 
