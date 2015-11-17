@@ -1,6 +1,6 @@
-// design values - length units are mm
-body_height = 1000;
-body_diameter = 100;
+// design values - length units are metres
+body_height = 1;
+body_diameter = 0.1;
 fin_count=3;
 
 // number of flat facets to use to represent a
@@ -38,6 +38,7 @@ module fin(angle=0) {
 
 // the main rocket itself is the union of the body,
 // cone and fins.
+fin_inc = 360 / fin_count;
 translate([0, 0, -0.5*(body_height + cone_height)]) {
     union() {
         cylinder(
@@ -52,7 +53,6 @@ translate([0, 0, -0.5*(body_height + cone_height)]) {
             );
         }
         
-        fin_inc = 360 / fin_count;
         for(a=[0:fin_inc:360-fin_inc]) {
             fin(angle=a);
         }
