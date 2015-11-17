@@ -17,5 +17,18 @@ To re-generate the STL file, run it through ``openscad``:
 $ openscad -o cartoon-rocket.stl cartoon-rocket.scad
 ```
 
-Alternatively the provided ``Makefile`` will run the command for you.
+The STL file is then surface-meshed via netgen which automatcally chooses a
+resolution. (We may wish to investigate options such as ``-fine`` later on.)
+
+The surface-meshed file is then volume-meshed via ``gmsh``. See the [.geo
+file](cartoon-rocket.domain.geo) for a specification of the domain bounding box.
+
+Alternatively the provided ``Makefile`` will run the commands for you.
+
+The generated mesh can be viewed via ``paraview`` by converting it to a ``vtk``
+file:
+
+```console
+$ gmsh -format vtk -o cartoon-rocket.domain.vtk cartoon-rocket.domain.msh -0
+```
 
