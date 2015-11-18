@@ -1,0 +1,4 @@
+dist: trusty
+sudo: true
+install: scripts/travis-install.sh
+script: scripts/travis-run-tests.sh
