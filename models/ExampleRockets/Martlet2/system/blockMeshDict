@@ -1,0 +1,34 @@
+FoamFile 
+{
+	version 	2.0;
+	format		ascii;
+	class		dictionary;
+	object		blockMeshDict;
+}
+
+convertToMeters 0.001;
+
+vertices
+(
+	(2000,-500,-500)	//Near bottom left hand corner
+	(-2000,-500,-500)	//Near bottom right hand corner
+	(2000,1000,-500)	//Far bottom left hand corner
+	(-2000,1000,-500)	//Far bottom right hand corner
+	(2000,-500,500)		//Near Top left hand corner
+	(-2000,-500,500)	//Near top right hand corner
+	(2000,500,500)		//Far top left hand corner
+	(-2000,500,500)		//Far top right hand corner
+);
+
+blocks
+(
+	hex( 0 1 2 3 4 5 6 7 ) ( 10 10 10 ) simpleGrading (1 1 1)//SnappyHexMesh will do the bulk of the work as this is just a background mesh
+);
+
+edges
+(
+);
+
+boundary
+( 
+);
