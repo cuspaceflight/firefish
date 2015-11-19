@@ -6,3 +6,8 @@ __pycache__
 build
 sdist
 *.egg-info
+
+# Ignore tox's work directory
+.tox
+.cache
+
