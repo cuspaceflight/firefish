@@ -13,7 +13,10 @@ setup(
 
     # PyPI packages required for the *installation* and usual running of the
     # tools.
-    install_requires=[],
+    install_requires=[
+        'numpy',
+        'matplotlib',
+    ],
 
     # Metadata for PyPI (https://pypi.python.org).
     description='Utilities for rocketry simulation',
