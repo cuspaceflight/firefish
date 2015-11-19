@@ -1,4 +1,4 @@
-# This file lists the requirements for building the cusfsim documentation.
-sphinx
+# This file lists the requirements for building the cusfsim documentation beyond
+# the basic "sphinx" package.
 recommonmark
 
