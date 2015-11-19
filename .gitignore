@@ -2,3 +2,7 @@
 *.pyc
 __pycache__
 
+# Ignore output from pip and friends
+build
+sdist
+*.egg-info
