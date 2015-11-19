@@ -1,3 +1,8 @@
+language: python
+python: 3.5
+env:
+  - TOX_ENV=py27
+  - TOX_ENV=py3
 dist: trusty
 sudo: true
 install: scripts/travis-install.sh
