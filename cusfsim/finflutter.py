@@ -10,11 +10,15 @@ from __future__ import division
 import numpy as np
 
 def model_atmosphere(altitudes):
-    """For the 1-d array *altitudes* giving geopotential altitudes in metres,
-    return a triple giving corresponding 1-d arrays of estimated pressure,
-    temperature and speed of sound.
+    """Model atmospheric pressure, temperature and speed of sound.
 
-    Units are Pascals, Celsius and m/s respectively.
+    Args:
+        altitudes (np.array): 1-d array of geopotential altitudes in metres
+
+    Returns:
+        A triple giving corresponding 1-d arrays of estimated pressure,
+        temperature and speed of sound. Units are Pascals, Celsius and m/s
+        respectively.
 
     >>> import numpy as np
     >>> zs = np.linspace(0, 30000, 100)
@@ -60,15 +64,13 @@ def model_atmosphere(altitudes):
 def flutter_velocity(pressures, speeds_of_sound,
                      root_chord, tip_chord, semi_span, thickness,
                      shear_modulus=2.62e9):
-    """For the 1-d array *pressures* containing atmospheric pressure in Pascals
-    and the 1-d array *speeds_of_sound* containing speeds of sound in
-    metres/second, return a 1-d array containing corresponding flutter
-    velocities in m/s.
+    """Calculate flutter velocities for a given fin design.
 
-    Fin dimensions are given via the *root_chord*, *tip_chord*, *semi_span* and
-    *thickness* arguments. All dimensions are in centimetres.
 
-    Use *shear_modulus* to specify the shear modulus of the fin material in
+    Fin dimensions are given via the root_chord, tip_chord, semi_span and
+    thickness arguments. All dimensions are in centimetres.
+
+    Use shear_modulus to specify the shear modulus of the fin material in
     Pascals.
 
     >>> import numpy as np
@@ -76,6 +78,18 @@ def flutter_velocity(pressures, speeds_of_sound,
     >>> ps, _, ss = model_atmosphere(zs)
     >>> vels = flutter_velocity(ps, ss, 20, 10, 10, 0.2)
     >>> assert vels.shape == ps.shape
+
+    Args:
+        pressures (np.array): 1-d array of atmospheric pressures in Pascals
+        speeds_of_sound (np.array): 1-d array of speeds of sound in m/s
+        root_chord: fin root chord (cm)
+        tip_chord: fin tip chord (cm)
+        semi_span: fin semi-span (cm)
+        thickness: fin thickness (cm)
+        shear_modulus: fin material shear modulus (Pascals)
+
+    Returns:
+        A 1-d array containing corresponding flutter velocities in m/s.
 
     """
     # Ensure input is 1d array of floating point values
