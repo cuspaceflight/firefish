@@ -4,7 +4,11 @@ root=true
 end_of_line = lf
 insert_final_newline = true
 
-[*.sh]
+[{*.sh,*.py}]
+indent_style = space
+indent_size = 4
+
+[tox.ini]
 indent_style = space
 indent_size = 4
 

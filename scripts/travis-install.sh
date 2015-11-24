@@ -25,3 +25,6 @@ sudo apt-get -y update
 # will only install unsigned packages with --force-yes.
 sudo apt-get -y --force-yes install openfoam30
 
+# Install tox to run our test suite
+pip install tox
+

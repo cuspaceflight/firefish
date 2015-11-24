@@ -1,3 +1,17 @@
+language: python
+# We explicity specify the build matrix here. This is to match the notional
+# "default" Python to the tox environment. In reality this shouldn't matter
+# since tox creates its own isolated environment independent of the system
+# Python. Pragmatically, however, it's nice to have the "language" column on
+# Travis match the version of Python we're testing against rather than the
+# only matching the version of Python used to run the test runner.
+# See: https://docs.travis-ci.com/user/customizing-the-build/#Build-Matrix
+matrix:
+  include:
+    - python: 2.7
+      env: TOX_ENV=py27
+    - python: 3.5
+      env: TOX_ENV=py3
 dist: trusty
 sudo: true
 install: scripts/travis-install.sh
