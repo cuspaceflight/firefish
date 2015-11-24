@@ -4,6 +4,7 @@
 .. toctree::
    :hidden:
 
+   examples
    reference
 
 CU Spaceflight Simulation Software

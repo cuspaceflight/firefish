@@ -5,3 +5,6 @@ def test_basic_import():
 
 def test_finflutter_import():
     import cusfsim.finflutter
+
+def test_case_import():
+    import cusfsim.case
