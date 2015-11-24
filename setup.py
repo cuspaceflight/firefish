@@ -15,7 +15,6 @@ setup(
     # tools.
     install_requires=[
         'numpy',
-        'matplotlib',
     ],
 
     # Metadata for PyPI (https://pypi.python.org).

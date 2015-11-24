@@ -9,9 +9,15 @@ language: python
 matrix:
   include:
     - python: 2.7
-      env: TOX_ENV=py27
+      env: TOX_ENV=py27-test
     - python: 3.5
-      env: TOX_ENV=py3
+      env: TOX_ENV=py3-test
+    - python: 2.7
+      env: TOX_ENV=py27-examples
+    - python: 3.5
+      env: TOX_ENV=py3-examples
+    - python: 3.5
+      env: TOX_ENV=docs
 dist: trusty
 sudo: true
 install: scripts/travis-install.sh
