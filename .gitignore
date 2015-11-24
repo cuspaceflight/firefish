@@ -11,3 +11,5 @@ sdist
 .tox
 .cache
 
+# Code-coverage output
+.coverage
