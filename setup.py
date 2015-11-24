@@ -23,6 +23,7 @@ setup(
     # tools.
     install_requires=[
         'numpy',
+        'PyFOAM',
     ] + enum_requires,
 
     # Metadata for PyPI (https://pypi.python.org).
