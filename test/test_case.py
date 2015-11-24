@@ -7,7 +7,8 @@ import os
 import pytest
 
 from cusfsim.case import (
-    Case, CaseDoesNotExist, Dimension, FileName, FileName, read_data_file
+    Case, CaseDoesNotExist, Dimension, FileName, FileName, read_data_file,
+    CaseToolRunFailed
 )
 
 @pytest.fixture
@@ -62,3 +63,13 @@ def test_dimension_type_preserved(tmpcase):
     assert d['foo'] == dims
     print(type(d['foo']))
     assert isinstance(d['foo'], Dimension)
+
+def test_run_tool(tmpcase):
+    """Simple incovation of run_tool succeeds."""
+    tmpcase.run_tool('foamInfoExec')
+
+def test_run_tool_needs_tool_to_succeed(tmpcase):
+    """Trying to run a tool which fails raises an error."""
+    # Running blockMesh with no blockMeshDict fails
+    with pytest.raises(CaseToolRunFailed):
+        tmpcase.run_tool('blockMesh')
