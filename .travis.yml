@@ -20,5 +20,9 @@ matrix:
       env: TOX_ENV=docs
 dist: trusty
 sudo: true
-install: scripts/travis-install.sh
+install:
+  - pip install coveralls
+  - scripts/travis-install.sh
 script: scripts/travis-run-tests.sh
+after_success:
+  - coveralls

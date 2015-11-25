@@ -1,6 +1,8 @@
 # m3cfd
 
 [![Build Status](https://travis-ci.org/cuspaceflight/m3cfd.svg?branch=master)](https://travis-ci.org/cuspaceflight/m3cfd)
+[![Coverage
+Status](https://coveralls.io/repos/cuspaceflight/m3cfd/badge.svg?branch=master&service=github)](https://coveralls.io/github/cuspaceflight/m3cfd?branch=master)
 
 CFD simulation software for Martlet 3
 
