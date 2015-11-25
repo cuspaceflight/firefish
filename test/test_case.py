@@ -65,11 +65,11 @@ def test_dimension_type_preserved(tmpcase):
     assert isinstance(d['foo'], Dimension)
 
 def test_run_tool(tmpcase):
-    """Simple incovation of run_tool succeeds."""
+    """Simple invocation of run_tool succeeds."""
     tmpcase.run_tool('foamInfoExec')
 
 def test_run_tool_needs_tool_to_exist(tmpcase):
-    """Simple incovation of run_tool fails for a non-existent tool."""
+    """Simple invocation of run_tool fails for a non-existent tool."""
     with pytest.raises(OSError):
         tmpcase.run_tool('thatsNoTool')
 
