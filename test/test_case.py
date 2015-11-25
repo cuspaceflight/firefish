@@ -68,6 +68,11 @@ def test_run_tool(tmpcase):
     """Simple incovation of run_tool succeeds."""
     tmpcase.run_tool('foamInfoExec')
 
+def test_run_tool_needs_tool_to_exist(tmpcase):
+    """Simple incovation of run_tool fails for a non-existent tool."""
+    with pytest.raises(OSError):
+        tmpcase.run_tool('thatsNoTool')
+
 def test_run_tool_needs_tool_to_succeed(tmpcase):
     """Trying to run a tool which fails raises an error."""
     # Running blockMesh with no blockMeshDict fails

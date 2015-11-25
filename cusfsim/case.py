@@ -12,8 +12,11 @@ OpenFOAM files are mapped into Python objects using the following conventions:
 
 """
 import contextlib
+import datetime
 import enum
 import os
+import subprocess
+import tempfile
 
 import PyFoam.Basics.DataStructures as PFDataStructs
 from PyFoam.Execution.BasicRunner import BasicRunner
@@ -227,15 +230,26 @@ class Case(object):
 
         Raises:
             CaseToolRunFailed: if the tool exits with an error
+            OSError: if the tool could not be started
         """
-        logname = 'log.{}'.format(tool_name)
-        runner = BasicRunner(
-            [tool_name, '-case', self.root_dir_path],
-            silent=True, logname=logname
+        # We will create a temporary file based on the basename of the tool.
+        datestr = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        tf = tempfile.NamedTemporaryFile(
+            prefix='log.' + os.path.basename(tool_name) + '.' + datestr + '.',
+            suffix='.txt', dir=self.root_dir_path, delete=False
         )
-        runner.start()
-        if not runner.runOK():
-            raise CaseToolRunFailed('Tool "{}" failed'.format(tool_name))
+
+        # We assume that the tool can take a -case argument
+        args = [tool_name, '-case', self.root_dir_path]
+
+        # Run the command
+        try:
+            with tf as log_file_obj:
+                subprocess.check_call(
+                    args, stdout=log_file_obj, stderr=subprocess.STDOUT
+                )
+        except subprocess.CalledProcessError as e:
+            raise CaseToolRunFailed(*e.args)
 
     def _get_rel_path(self, path):
         """Return path relative to root directory."""
