@@ -19,7 +19,6 @@ import subprocess
 import tempfile
 
 import PyFoam.Basics.DataStructures as PFDataStructs
-from PyFoam.Execution.BasicRunner import BasicRunner
 from PyFoam.RunDictionary.ParsedParameterFile import (
     ParsedParameterFile, WriteParameterFile
 )
@@ -47,19 +46,19 @@ class FileName(enum.Enum):
     """An enumeration of well known OpenFOAM file locations."""
 
     #: controlDict
-    CONTROL                 = _sys_path('controlDict')
+    CONTROL = _sys_path('controlDict')
 
     #: blockMeshDict
-    BLOCK_MESH              = _sys_path('blockMeshDict')
+    BLOCK_MESH = _sys_path('blockMeshDict')
 
     #: fvSolution
-    FV_SOLUTION             = _sys_path('fvSolution')
+    FV_SOLUTION = _sys_path('fvSolution')
 
     #: fvSchemes
-    FV_SCHEMES              = _sys_path('fvSchemes')
+    FV_SCHEMES = _sys_path('fvSchemes')
 
     #: transportProperties
-    TRANSPORT_PROPERTIES    = _constant_path('transportProperties')
+    TRANSPORT_PROPERTIES = _constant_path('transportProperties')
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
@@ -109,11 +108,11 @@ class Dimension(PFDataStructs.Dimension):
 # but cusfsim tries very hard to hide PyFOAM's API from the user.
 def _monkey_patch_pyfoam():
     from PyFoam.Basics.FoamFileGenerator import FoamFileGenerator
-    from PyFoam.RunDictionary import ParsedParameterFile
+    import PyFoam.RunDictionary.ParsedParameterFile as ParsedParameterFileModule
     PFDataStructs.Dimension = Dimension
     FoamFileGenerator.Dimension = Dimension
     FoamFileGenerator.primitiveTypes.extend([Dimension])
-    ParsedParameterFile.Dimension = Dimension
+    ParsedParameterFileModule.Dimension = Dimension
 _monkey_patch_pyfoam()
 
 class FileClass(enum.Enum):
@@ -177,7 +176,7 @@ class Case(object):
         self.root_dir_path = root_dir_path
 
     def mutable_data_file(self, path,
-                     create_class=FileClass.DICTIONARY, create=True):
+                          create_class=FileClass.DICTIONARY, create=True):
         """A context manager representing a dict. Changes to the dict are
         written back to disk.
 
@@ -258,7 +257,7 @@ class Case(object):
 ## PRIVATE CLASSES AND FUNCTIONS
 
 @contextlib.contextmanager
-def _mutable_data_file_manager(path, create_class=FileClass.DICTIONARY, 
+def _mutable_data_file_manager(path, create_class=FileClass.DICTIONARY,
                                create=True):
     """Context manager for mutating an OpenFOAM dict.
 

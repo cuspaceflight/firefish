@@ -44,16 +44,16 @@ def model_atmosphere(altitudes):
     regs[altitudes > 25000] = 3
 
     # Troposphere
-    ts[regs==1] = 15.04 - 0.00649*altitudes[regs==1]
-    ps[regs==1] = 1000 * 101.29*((ts[regs==1] + 273.1)/288.08)**5.256
+    ts[regs == 1] = 15.04 - 0.00649*altitudes[regs == 1]
+    ps[regs == 1] = 1000 * 101.29*((ts[regs == 1] + 273.1)/288.08)**5.256
 
     # Lower Stratosphere
-    ts[regs==2] = -56.46
-    ps[regs==2] = 1000 * 22.65 * np.exp(1.73 - 0.000157*altitudes[regs==2])
+    ts[regs == 2] = -56.46
+    ps[regs == 2] = 1000 * 22.65 * np.exp(1.73 - 0.000157*altitudes[regs == 2])
 
     # Upper Stratosphere
-    ts[regs==3] = -131.21 + 0.00299*altitudes[regs==3]
-    ps[regs==3] = 1000 * 2.488 * ((ts[regs==3] + 273.1) / 216.6)**-11.388
+    ts[regs == 3] = -131.21 + 0.00299*altitudes[regs == 3]
+    ps[regs == 3] = 1000 * 2.488 * ((ts[regs == 3] + 273.1) / 216.6)**-11.388
 
     # "from Hyperphysics"
     ss = 331.3 * np.sqrt(1 + (ts / 273.15))
