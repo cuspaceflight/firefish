@@ -1,7 +1,32 @@
 """
 Calculation of fin flutter vs. altitude.
 
-FIXME: document where this comes from and how it is derived.
+.. todo::
+
+    document where this comes from and how it is derived.
+
+This module provides a simple API for computing fin-flutter velocity as a
+function of altitude. These can then be plotted. For example:
+
+.. plot::
+    :include-source:
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from cusfsim import finflutter
+
+    zs = np.linspace(0, 50000, 200)
+    ps, _, ss = finflutter.model_atmosphere(zs)
+    vs = finflutter.flutter_velocity(
+        ps, ss, root_chord=20, tip_chord=10, semi_span=10, thickness=0.2
+    )
+
+    plt.plot(zs * 1e-3, vs)
+    plt.grid()
+    plt.title('Flutter velocity versus altitude')
+    plt.xlabel('Altitude [km]')
+    plt.ylabel('Flutter velocity [ms${}^{-1}$]')
+    plt.show()
 
 """
 # Make sure a/b does what we expect even if both are integers(!)
@@ -44,16 +69,16 @@ def model_atmosphere(altitudes):
     regs[altitudes > 25000] = 3
 
     # Troposphere
-    ts[regs==1] = 15.04 - 0.00649*altitudes[regs==1]
-    ps[regs==1] = 1000 * 101.29*((ts[regs==1] + 273.1)/288.08)**5.256
+    ts[regs == 1] = 15.04 - 0.00649*altitudes[regs == 1]
+    ps[regs == 1] = 1000 * 101.29*((ts[regs == 1] + 273.1)/288.08)**5.256
 
     # Lower Stratosphere
-    ts[regs==2] = -56.46
-    ps[regs==2] = 1000 * 22.65 * np.exp(1.73 - 0.000157*altitudes[regs==2])
+    ts[regs == 2] = -56.46
+    ps[regs == 2] = 1000 * 22.65 * np.exp(1.73 - 0.000157*altitudes[regs == 2])
 
     # Upper Stratosphere
-    ts[regs==3] = -131.21 + 0.00299*altitudes[regs==3]
-    ps[regs==3] = 1000 * 2.488 * ((ts[regs==3] + 273.1) / 216.6)**-11.388
+    ts[regs == 3] = -131.21 + 0.00299*altitudes[regs == 3]
+    ps[regs == 3] = 1000 * 2.488 * ((ts[regs == 3] + 273.1) / 216.6)**-11.388
 
     # "from Hyperphysics"
     ss = 331.3 * np.sqrt(1 + (ts / 273.15))
