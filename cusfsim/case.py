@@ -34,6 +34,9 @@ class CaseDoesNotExist(CaseException):
 class CaseToolRunFailed(CaseException):
     """There was a failure running a tool on a case directory."""
 
+class CaseAlreadyExists(CaseException):
+    """Some resource already existed."""
+
 ## ENUMERATIONS
 
 def _sys_path(p):
@@ -249,6 +252,44 @@ class Case(object):
                 )
         except subprocess.CalledProcessError as e:
             raise CaseToolRunFailed(*e.args)
+
+    def add_tri_surface(self, name, geom, clobber_existing=False):
+        """Add a triangulated surface to the case.
+
+        Adds the geometry specified in *geom* to the case under the
+        ``constant/triSurface`` directory. The geometry is saved in STL format.
+
+        The geometry is added with the given name. If name is ``foo``, for
+        example, it will be saved with the filename ``foo.stl``.
+
+        .. note::
+
+            Do not add the ``.stl`` extension to *name*. Future versions of this
+            method may wish to allow other ways of specifying file format.
+
+        Args:
+            name (str): name to save surface as
+            geom (stl.mesh.Mesh): geometry representing surface
+            clobber_existing (bool): if False, do not overwrite an existing file
+
+        Raises:
+            CaseAlreadyExists: if a surface with the given name already exists
+                and *clobber_existing* was not True.
+
+        """
+        stl_path = os.path.join(
+            self.root_dir_path, 'constant', 'triSurface', '{}.stl'.format(name)
+        )
+
+        # FIXME: this is racy
+        if not clobber_existing and os.path.exists(stl_path):
+            raise CaseAlreadyExists(
+                'triSurface {} already exists'.format(stl_path)
+            )
+
+        if not os.path.isdir(os.path.dirname(stl_path)):
+            os.makedirs(os.path.dirname(stl_path))
+        geom.save(stl_path)
 
     def _get_rel_path(self, path):
         """Return path relative to root directory."""
