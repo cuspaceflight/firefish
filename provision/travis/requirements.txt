@@ -1,3 +1,3 @@
-# Pythin packages which need installing on travis
+# Python packages which need installing on travis
 coveralls
 tox
