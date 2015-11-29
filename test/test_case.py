@@ -6,9 +6,10 @@ import os
 
 import pytest
 
+import cusfsim.geometry
 from cusfsim.case import (
     Case, CaseDoesNotExist, Dimension, FileName, FileName, read_data_file,
-    CaseToolRunFailed
+    CaseToolRunFailed, CaseAlreadyExists
 )
 
 @pytest.fixture
@@ -19,6 +20,12 @@ def tmpcase(tmpdir):
     from cusfsim.case import Case
     case_dir = tmpdir.join('temp_case')
     return Case(case_dir.strpath)
+
+@pytest.fixture
+def unit_sphere_geometry(geomdir):
+    """An stl.mesh.Mesh representing the unit sphere."""
+    stl_path = os.path.join(geomdir, 'unit_sphere.stl')
+    return cusfsim.geometry.load(stl_path)
 
 def _read_foam_dict(path):
     """Read foam dict file at path and return content."""
@@ -78,3 +85,22 @@ def test_run_tool_needs_tool_to_succeed(tmpcase):
     # Running blockMesh with no blockMeshDict fails
     with pytest.raises(CaseToolRunFailed):
         tmpcase.run_tool('blockMesh')
+
+def test_add_tri_surface(tmpcase, unit_sphere_geometry):
+    assert not os.path.isfile(os.path.join(
+        tmpcase.root_dir_path, 'constant', 'triSurface', 'surface.stl'
+    ))
+    tmpcase.add_tri_surface('surface', unit_sphere_geometry)
+    assert os.path.isfile(os.path.join(
+        tmpcase.root_dir_path, 'constant', 'triSurface', 'surface.stl'
+    ))
+
+def test_add_tri_surface_does_not_clobber(tmpcase, unit_sphere_geometry):
+    tmpcase.add_tri_surface('surface', unit_sphere_geometry)
+    with pytest.raises(CaseAlreadyExists):
+        tmpcase.add_tri_surface('surface', unit_sphere_geometry)
+
+def test_add_tri_surface_will_clobber_if_asked(tmpcase, unit_sphere_geometry):
+    tmpcase.add_tri_surface('surface', unit_sphere_geometry)
+    tmpcase.add_tri_surface('surface', unit_sphere_geometry,
+                            clobber_existing=True)

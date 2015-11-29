@@ -8,3 +8,6 @@ def test_finflutter_import():
 
 def test_case_import():
     import cusfsim.case
+
+def test_geometry_import():
+    import cusfsim.geometry
