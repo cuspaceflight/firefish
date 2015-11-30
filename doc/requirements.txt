@@ -1,5 +1,9 @@
-# This file lists the requirements for building the cusfsim documentation beyond
-# the basic "sphinx" package.
+# This file lists packages (not including the basic sphinx package) which need
+# to be installed to build the documentation.
+#
+# It is not the file to list general requirements for the software. (I.e.
+# packages which need to be installed to run the software.)
+
 recommonmark
 matplotlib
 
