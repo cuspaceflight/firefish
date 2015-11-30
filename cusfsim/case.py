@@ -44,19 +44,25 @@ class FileName(enum.Enum):
     """An enumeration of well known OpenFOAM file locations."""
 
     #: controlDict
-    CONTROL                 = _sys_path('controlDict')
+    CONTROL                     = _sys_path('controlDict')
 
     #: blockMeshDict
-    BLOCK_MESH              = _sys_path('blockMeshDict')
+    BLOCK_MESH                  = _sys_path('blockMeshDict')
 
     #: fvSolution
-    FV_SOLUTION             = _sys_path('fvSolution')
+    FV_SOLUTION                 = _sys_path('fvSolution')
 
     #: fvSchemes
-    FV_SCHEMES              = _sys_path('fvSchemes')
+    FV_SCHEMES                  = _sys_path('fvSchemes')
 
     #: transportProperties
-    TRANSPORT_PROPERTIES    = _constant_path('transportProperties')
+    TRANSPORT_PROPERTIES        = _constant_path('transportProperties')
+    
+    #: thermoPhysicalProperties
+    THERMOPHYSICAL_PROPERTIES   = _constant_path('thermophysicalProperties')
+    
+    #: turbulence Properties
+    TURBULENCE_PROPERTIES       = _constant_path('turbulenceProperties')
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
