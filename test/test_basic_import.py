@@ -11,3 +11,7 @@ def test_case_import():
 
 def test_geometry_import():
     import cusfsim.geometry
+
+def test_io_import():
+	import cusfsim.io
+
