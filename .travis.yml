@@ -18,7 +18,13 @@ matrix:
       env: TOX_ENV=py3-examples
     - python: 3.5
       env: TOX_ENV=docs
+    - python: 2.7 # pylint doesn't play well with 3.5
+      env: TOX_ENV=pylint
 dist: trusty
 sudo: true
-install: scripts/travis-install.sh
-script: scripts/travis-run-tests.sh
+install:
+  - provision/travis/install.sh
+  - pip install -r provision/travis/requirements.txt
+script: provision/travis/run-tests.sh
+after_success:
+  - coveralls

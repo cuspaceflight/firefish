@@ -12,11 +12,13 @@ OpenFOAM files are mapped into Python objects using the following conventions:
 
 """
 import contextlib
+import datetime
 import enum
 import os
+import subprocess
+import tempfile
 
 import PyFoam.Basics.DataStructures as PFDataStructs
-from PyFoam.Execution.BasicRunner import BasicRunner
 from PyFoam.RunDictionary.ParsedParameterFile import (
     ParsedParameterFile, WriteParameterFile
 )
@@ -31,6 +33,9 @@ class CaseDoesNotExist(CaseException):
 
 class CaseToolRunFailed(CaseException):
     """There was a failure running a tool on a case directory."""
+
+class CaseAlreadyExists(CaseException):
+    """Some resource already existed."""
 
 ## ENUMERATIONS
 
@@ -63,6 +68,7 @@ class FileName(enum.Enum):
     
     #: turbulence Properties
     TURBULENCE_PROPERTIES       = _constant_path('turbulenceProperties')
+
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
@@ -112,11 +118,11 @@ class Dimension(PFDataStructs.Dimension):
 # but cusfsim tries very hard to hide PyFOAM's API from the user.
 def _monkey_patch_pyfoam():
     from PyFoam.Basics.FoamFileGenerator import FoamFileGenerator
-    from PyFoam.RunDictionary import ParsedParameterFile
+    import PyFoam.RunDictionary.ParsedParameterFile as ParsedParameterFileModule
     PFDataStructs.Dimension = Dimension
     FoamFileGenerator.Dimension = Dimension
     FoamFileGenerator.primitiveTypes.extend([Dimension])
-    ParsedParameterFile.Dimension = Dimension
+    ParsedParameterFileModule.Dimension = Dimension
 _monkey_patch_pyfoam()
 
 class FileClass(enum.Enum):
@@ -180,7 +186,7 @@ class Case(object):
         self.root_dir_path = root_dir_path
 
     def mutable_data_file(self, path,
-                     create_class=FileClass.DICTIONARY, create=True):
+                          create_class=FileClass.DICTIONARY, create=True):
         """A context manager representing a dict. Changes to the dict are
         written back to disk.
 
@@ -233,15 +239,64 @@ class Case(object):
 
         Raises:
             CaseToolRunFailed: if the tool exits with an error
+            OSError: if the tool could not be started
         """
-        logname = 'log.{}'.format(tool_name)
-        runner = BasicRunner(
-            [tool_name, '-case', self.root_dir_path],
-            silent=True, logname=logname
+        # We will create a temporary file based on the basename of the tool.
+        datestr = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        tf = tempfile.NamedTemporaryFile(
+            prefix='log.' + os.path.basename(tool_name) + '.' + datestr + '.',
+            suffix='.txt', dir=self.root_dir_path, delete=False
         )
-        runner.start()
-        if not runner.runOK():
-            raise CaseToolRunFailed('Tool "{}" failed'.format(tool_name))
+
+        # We assume that the tool can take a -case argument
+        args = [tool_name, '-case', self.root_dir_path]
+
+        # Run the command
+        try:
+            with tf as log_file_obj:
+                subprocess.check_call(
+                    args, stdout=log_file_obj, stderr=subprocess.STDOUT
+                )
+        except subprocess.CalledProcessError as e:
+            raise CaseToolRunFailed(*e.args)
+
+    def add_tri_surface(self, name, geom, clobber_existing=False):
+        """Add a triangulated surface to the case.
+
+        Adds the geometry specified in *geom* to the case under the
+        ``constant/triSurface`` directory. The geometry is saved in STL format.
+
+        The geometry is added with the given name. If name is ``foo``, for
+        example, it will be saved with the filename ``foo.stl``.
+
+        .. note::
+
+            Do not add the ``.stl`` extension to *name*. Future versions of this
+            method may wish to allow other ways of specifying file format.
+
+        Args:
+            name (str): name to save surface as
+            geom (stl.mesh.Mesh): geometry representing surface
+            clobber_existing (bool): if False, do not overwrite an existing file
+
+        Raises:
+            CaseAlreadyExists: if a surface with the given name already exists
+                and *clobber_existing* was not True.
+
+        """
+        stl_path = os.path.join(
+            self.root_dir_path, 'constant', 'triSurface', '{}.stl'.format(name)
+        )
+
+        # FIXME: this is racy
+        if not clobber_existing and os.path.exists(stl_path):
+            raise CaseAlreadyExists(
+                'triSurface {} already exists'.format(stl_path)
+            )
+
+        if not os.path.isdir(os.path.dirname(stl_path)):
+            os.makedirs(os.path.dirname(stl_path))
+        geom.save(stl_path)
 
     def _get_rel_path(self, path):
         """Return path relative to root directory."""
@@ -250,7 +305,7 @@ class Case(object):
 ## PRIVATE CLASSES AND FUNCTIONS
 
 @contextlib.contextmanager
-def _mutable_data_file_manager(path, create_class=FileClass.DICTIONARY, 
+def _mutable_data_file_manager(path, create_class=FileClass.DICTIONARY,
                                create=True):
     """Context manager for mutating an OpenFOAM dict.
 

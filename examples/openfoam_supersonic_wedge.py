@@ -1,5 +1,12 @@
-""" 
+"""
 Example which produces flow over a supersonic wedge
+
+>>>import os
+>>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cavity')
+>>> main(case_dir)
+>>> os.path.isdir(os.path.join(case_dir, '10'))
+True
+
 """
 
 import os
@@ -13,8 +20,7 @@ def main(case_dir='wedge'):
     # Add the information needed by blockMesh.
     write_initial_control_dict(case)
     write_block_mesh_dict(case)
-    
-    #we generate the mesh
+    #we generate the mes1h
     case.run_tool('blockMesh')
     #we prepare the thermophysical and turbulence properties
     write_thermophysical_properties(case)
@@ -22,13 +28,11 @@ def main(case_dir='wedge'):
     #we write fvScheme and fvSolution
     write_fv_schemes(case)
     write_fv_solution(case)
-    
     write_initial_conditions(case)
-    
     case.run_tool('rhoCentralFoam')
 
-
 def create_new_case(case_dir):
+    """Creates new case directory"""
     #Checks to make sure we don't overwite an existing case
     if os.path.exists(case_dir):
         raise RuntimeError(
@@ -38,6 +42,9 @@ def create_new_case(case_dir):
     return Case(case_dir)
 
 def write_initial_control_dict(case):
+    """Sets up the control dictionary.
+    In this example we use the rhoCentralFoam compressible solver"""
+
     # Control dict from tutorial
     control_dict = {
         'application': 'rhoCentralFoam',
@@ -64,6 +71,7 @@ def write_initial_control_dict(case):
         d.update(control_dict)
 
 def write_block_mesh_dict(case):
+    """Writes the block mesh"""
     block_mesh_dict = {
         'convertToMeters': 1,
 
@@ -76,9 +84,12 @@ def write_block_mesh_dict(case):
 
         'blocks': [
             (
-                'hex', [0, 7, 2, 1, 8, 15, 10, 9], [40, 40, 1], 'simpleGrading', [1, 1, 1],
-                'hex', [7, 6, 3, 2, 15, 14, 11, 10], [40, 40, 1], 'simpleGrinading', [1, 1, 1],
-                'hex', [6, 5, 4, 3, 14, 13, 12, 11], [40, 40, 1], 'simpleGrading', [1, 1, 1],
+                'hex', [0, 7, 2, 1, 8, 15, 10, 9], [40, 40, 1],
+                'simpleGrading', [1, 1, 1],
+                'hex', [7, 6, 3, 2, 15, 14, 11, 10], [40, 40, 1],
+                'simpleGrinading', [1, 1, 1],
+                'hex', [6, 5, 4, 3, 14, 13, 12, 11], [40, 40, 1],
+                'simpleGrading', [1, 1, 1],
             )
         ],
 
@@ -89,11 +100,11 @@ def write_block_mesh_dict(case):
         'boundary': [
             ('inlet', {
                 'type': 'patch',
-                'faces': [ [0, 1, 9, 8] ],
+                'faces': [[0, 1, 9, 8]],
             }),
             ('outlet', {
                 'type': 'patch',
-                'faces': [ [12, 4, 5, 13] ],
+                'faces': [[12, 4, 5, 13]],
             }),
             ('fixedWalls', {
                 'type': 'wall',
@@ -109,12 +120,12 @@ def write_block_mesh_dict(case):
             ('frontAndBack', {
                 'type': 'empty',
                 'faces': [
-                    [1,0,7,2],
-                    [2,7,6,3],
-                    [3,6,5,4],
-                    [8,9,10,15],
-                    [15,10,11,14],
-                    [14,11,12,13],
+                    [1, 0, 7, 2],
+                    [2, 7, 6, 3],
+                    [3, 6, 5, 4],
+                    [8, 9, 10, 15],
+                    [15, 10, 11, 14],
+                    [14, 11, 12, 13],
                 ],
             }),
         ],
@@ -124,50 +135,61 @@ def write_block_mesh_dict(case):
 
     with case.mutable_data_file(FileName.BLOCK_MESH) as d:
         d.update(block_mesh_dict)
-        
+
 def write_thermophysical_properties(case):
+    """Sets the thermdynamic properties of the gas.
+    These are chosen such that at a temperature of 1K the speed of sound is
+    1m/s"""
     thermo_dict = {
-        'thermoType' : { 'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
-                         'transport' : 'const' , 'thermo'  : 'hConst',
-                         'equationOfState' : 'perfectGas', 'specie' : 'specie',
-                         'energy' : 'sensibleInternalEnergy' },
-        'mixture' : { 'specie' : { 'nMoles' : 1 , 'molWeight' : 11640.3 },
-                      'thermodynamics' : { 'Cp' : 2.5, 'Hf' : 0 },
-                      'transport' : { 'mu' : 0, 'Pr' : 1 } } }
+        'thermoType' : {'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
+                        'transport' : 'const', 'thermo'  : 'hConst',
+                        'equationOfState' : 'perfectGas', 'specie' : 'specie',
+                        'energy' : 'sensibleInternalEnergy'},
+        'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
+                      'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
+                      'transport' : {'mu' : 0, 'Pr' : 1}}}
     with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
         d.update(thermo_dict)
-        
+
 def write_turbulence_properties(case):
+    """Disables the turbulent solver"""
     turbulence_dict = {
-        'simulationType' : 'laminar' }
+        'simulationType' : 'laminar'}
     with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
         d.update(turbulence_dict)
-        
-
-        
 
 def write_fv_schemes(case):
-    fv_schemes={
-        'ddtSchemes'  : { 'default' : 'Euler' },
-        'gradSchemes' : { 'default' : 'Gauss linear' },
-        'divSchemes'  : { 'default' : 'none', 'div(tauMC)' : 'Gauss linear' },
-        'laplacianSchemes' : { 'default' : 'Gauss linear corrected' },
-        'interpolationSchemes' : { 'default' : 'linear', 'reconstruct(rho)' : 'vanLeer',
-                                   'reconstruct(U)' : 'vanLeerV', 'reconstruct(T)': 'vanLeer' },
-        'snGradSchemes' : { 'default': 'corrected' } }
+    """Sets fv_schemes"""
+    fv_schemes = {
+        'ddtSchemes'  : {'default' : 'Euler'},
+        'gradSchemes' : {'default' : 'Gauss linear'},
+        'divSchemes'  : {'default' : 'none', 'div(tauMC)' : 'Gauss linear'},
+        'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
+        'interpolationSchemes' : {'default' : 'linear',
+                                  'reconstruct(rho)' : 'vanLeer',
+                                  'reconstruct(U)' : 'vanLeerV',
+                                  'reconstruct(T)': 'vanLeer'},
+        'snGradSchemes' : {'default': 'corrected'}}
     with case.mutable_data_file(FileName.FV_SCHEMES) as d:
         d.update(fv_schemes)
-        
+
 def write_fv_solution(case):
-    fv_solution = { 
-        'solvers' : { '"(rho|rhoU|rhoE)"': { 'solver' : 'diagonal' },
-                      'U' : { 'solver'  : 'smoothSolver', 'smoother' : 'GaussSeidel', 
-                              'nSweeps' : 2, 'tolerance' : 1e-09, 'relTol' : 0.01 },
-                      'h' : { '$U' : ' ', 'tolerance' : 1e-10, 'relTol' : 0 } } }
+    """Sets fv_solution"""
+    fv_solution = {
+        'solvers' : {'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
+                     'U' : {'solver'  : 'smoothSolver',
+                            'smoother' : 'GaussSeidel',
+                            'nSweeps' : 2,
+                            'tolerance' : 1e-09,
+                            'relTol' : 0.01},
+                     'h' : {'$U' : ' ',
+                            'tolerance' : 1e-10,
+                            'relTol' : 0}}}
     with case.mutable_data_file(FileName.FV_SOLUTION) as d:
         d.update(fv_solution)
-        
+
 def write_initial_conditions(case):
+    """Sets the initial conditions"""
     # Create the p initial conditions
     p_file = case.mutable_data_file(
         '0/p', create_class=FileClass.SCALAR_FIELD_3D
@@ -177,10 +199,10 @@ def write_initial_conditions(case):
             'dimensions': Dimension(1, -1, -2, 0, 0, 0, 0),
             'internalField': ('uniform', 1),
             'boundaryField': {
-                'inlet' : { 'type' : 'fixedValue', 'value' : 'uniform 1'},
-                'outlet': { 'type': 'zeroGradient' },
-                'fixedWalls': { 'type': 'zeroGradient' },
-                'frontAndBack': { 'type': 'empty' },
+                'inlet' : {'type' : 'fixedValue', 'value' : 'uniform 1'},
+                'outlet': {'type': 'zeroGradient'},
+                'fixedWalls': {'type': 'zeroGradient'},
+                'frontAndBack': {'type': 'empty'},
             },
         })
 
@@ -193,14 +215,15 @@ def write_initial_conditions(case):
             'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
             'internalField': ('uniform', [2, 0, 0]),
             'boundaryField': {
-                'inlet' : { 'type' : 'fixedValue', 'value' : ( 'uniform', [2, 0, 0] )},
+                'inlet' : {'type' : 'fixedValue',
+                           'value' : ('uniform', [2, 0, 0])},
                 'outlet': {
-                    'type': 'zeroGradient' 
+                    'type': 'zeroGradient'
                 },
                 'fixedWalls': {
                     'type': 'slip'
                 },
-                'frontAndBack': { 'type': 'empty' },
+                'frontAndBack': {'type': 'empty'},
             },
         })
         # Create the T initial conditions
@@ -212,14 +235,14 @@ def write_initial_conditions(case):
             'dimensions': Dimension(0, 0, 0, 1, 0, 0, 0),
             'internalField': ('uniform', 1),
             'boundaryField': {
-                'inlet' : { 'type' : 'fixedValue', 'value' : ( 'uniform', 1 )},
+                'inlet' : {'type' : 'fixedValue', 'value' : ('uniform', 1)},
                 'outlet': {
-                    'type': 'zeroGradient' 
+                    'type': 'zeroGradient'
                 },
                 'fixedWalls': {
                     'type': 'zeroGradient'
                 },
-                'frontAndBack': { 'type': 'empty' },
+                'frontAndBack': {'type': 'empty'},
             },
         })
 if __name__ == '__main__':
