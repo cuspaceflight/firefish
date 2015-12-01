@@ -23,8 +23,8 @@ matrix:
 dist: trusty
 sudo: true
 install:
-  - pip install coveralls
-  - scripts/travis-install.sh
-script: scripts/travis-run-tests.sh
+  - provision/travis/install.sh
+  - pip install -r provision/travis/requirements.txt
+script: provision/travis/run-tests.sh
 after_success:
   - coveralls
