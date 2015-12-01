@@ -1,7 +1,7 @@
 """
 Example which produces flow over a supersonic wedge
 
->>>import os
+>>> import os
 >>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cavity')
 >>> main(case_dir)
 >>> os.path.isdir(os.path.join(case_dir, '10'))
