@@ -3,7 +3,9 @@ Example which produces flow over a supersonic wedge
 """
 
 import os
-from cusfsim.case import Case,FileName, FileClass
+from cusfsim.case import (
+    Case, Dimension, FileName, FileClass
+)
 
 def main(case_dir='wedge'):
     #Try to create new case directory
@@ -11,12 +13,19 @@ def main(case_dir='wedge'):
     # Add the information needed by blockMesh.
     write_initial_control_dict(case)
     write_block_mesh_dict(case)
+    
+    #we generate the mesh
+    case.run_tool('blockMesh')
     #we prepare the thermophysical and turbulence properties
     write_thermophysical_properties(case)
     write_turbulence_properties(case)
     #we write fvScheme and fvSolution
     write_fv_schemes(case)
     write_fv_solution(case)
+    
+    write_initial_conditions(case)
+    
+    case.run_tool('rhoCentralFoam')
 
 
 def create_new_case(case_dir):
@@ -36,7 +45,7 @@ def write_initial_control_dict(case):
         'startTime': 0,
         'stopAt': 'endTime',
         'endTime': 10,
-        'deltaT': 0.005,
+        'deltaT': 0.001,
         'writeControl': 'runTime',
         'writeInterval': 0.5,
         'purgeWrite': 0,
@@ -67,9 +76,9 @@ def write_block_mesh_dict(case):
 
         'blocks': [
             (
-                'hex', [0, 7, 2, 1, 8, 15, 10, 9], [40, 20, 1], 'simpleGrading', [1, 1, 1],
-                'hex', [7, 6, 3, 2, 15, 14, 11, 10], [40, 20, 1], 'simpleGrinading', [1, 1, 1],
-                'hex', [6, 5, 4, 3, 14, 13, 12, 11], [40, 20, 1], 'simpleGrading', [1, 1, 1],
+                'hex', [0, 7, 2, 1, 8, 15, 10, 9], [40, 40, 1], 'simpleGrading', [1, 1, 1],
+                'hex', [7, 6, 3, 2, 15, 14, 11, 10], [40, 40, 1], 'simpleGrinading', [1, 1, 1],
+                'hex', [6, 5, 4, 3, 14, 13, 12, 11], [40, 40, 1], 'simpleGrading', [1, 1, 1],
             )
         ],
 
@@ -158,6 +167,60 @@ def write_fv_solution(case):
     with case.mutable_data_file(FileName.FV_SOLUTION) as d:
         d.update(fv_solution)
         
-        
+def write_initial_conditions(case):
+    # Create the p initial conditions
+    p_file = case.mutable_data_file(
+        '0/p', create_class=FileClass.SCALAR_FIELD_3D
+    )
+    with p_file as p:
+        p.update({
+            'dimensions': Dimension(1, -1, -2, 0, 0, 0, 0),
+            'internalField': ('uniform', 1),
+            'boundaryField': {
+                'inlet' : { 'type' : 'fixedValue', 'value' : 'uniform 1'},
+                'outlet': { 'type': 'zeroGradient' },
+                'fixedWalls': { 'type': 'zeroGradient' },
+                'frontAndBack': { 'type': 'empty' },
+            },
+        })
+
+    # Create the U initial conditions
+    U_file = case.mutable_data_file(
+        '0/U', create_class=FileClass.VECTOR_FIELD_3D
+    )
+    with U_file as U:
+        U.update({
+            'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
+            'internalField': ('uniform', [2, 0, 0]),
+            'boundaryField': {
+                'inlet' : { 'type' : 'fixedValue', 'value' : ( 'uniform', [2, 0, 0] )},
+                'outlet': {
+                    'type': 'zeroGradient' 
+                },
+                'fixedWalls': {
+                    'type': 'slip'
+                },
+                'frontAndBack': { 'type': 'empty' },
+            },
+        })
+        # Create the T initial conditions
+    T_file = case.mutable_data_file(
+        '0/T', create_class=FileClass.SCALAR_FIELD_3D
+    )
+    with T_file as T:
+        T.update({
+            'dimensions': Dimension(0, 0, 0, 1, 0, 0, 0),
+            'internalField': ('uniform', 1),
+            'boundaryField': {
+                'inlet' : { 'type' : 'fixedValue', 'value' : ( 'uniform', 1 )},
+                'outlet': {
+                    'type': 'zeroGradient' 
+                },
+                'fixedWalls': {
+                    'type': 'zeroGradient'
+                },
+                'frontAndBack': { 'type': 'empty' },
+            },
+        })
 if __name__ == '__main__':
     main()
