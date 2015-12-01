@@ -3,7 +3,7 @@
 # which is better addressed via manual code review.
 disable=
     missing-docstring, invalid-name, too-few-public-methods,
-    too-many-arguments
+    too-many-arguments, fixme, wrong-import-order, redefined-variable-type
 
 # There's an annoying interaction with pylint and numpy which means that pylint
 # tags all attempts at using a numpy function as an attempt to access a

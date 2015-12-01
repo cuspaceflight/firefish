@@ -23,6 +23,8 @@ setup(
     # tools.
     install_requires=[
         'numpy',
+        'numpy-stl',
+        'pandas',
         'PyFOAM',
     ] + enum_requires,
 
