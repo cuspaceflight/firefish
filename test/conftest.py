@@ -10,3 +10,8 @@ def datadir():
 def geomdir(datadir):
     """Geometry data directory."""
     return os.path.join(datadir, 'geometry')
+
+@pytest.fixture
+def iodir(datadir):
+    """IO data directory."""
+    return os.path.join(datadir, 'io')

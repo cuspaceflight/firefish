@@ -7,6 +7,12 @@ OpenFOAM case directory manipulation
 .. automodule:: cusfsim.case
    :members:
 
+IO
+--
+
+.. automodule:: cusfsim.io
+   :members:
+
 Geometry manipulation
 ---------------------
 
