@@ -6,7 +6,7 @@
 Supersonic flow over wedge
 ----------------------
 
-The :download:`openfoam_supersonic_wedge.py <../examples/openfoam_cavity_tutorial.py>`
+The :download:`openfoam_supersonic_wedge.py <../examples/openfoam_supersonic_wedge.py>`
 script provides an example of setting up a compressible flow solver in OpenFoam.
 
 
