@@ -18,7 +18,7 @@ compressible solver must therefore be used. In this case we use *rhoCentralFoam*
 control file must therefore be set accordingly:
 
 .. literalinclude:: ../examples/openfoam_supersonic_wedge.py
-   :pyobject: write_initial_control_dict
+   :pyobject: write_control_dict
    
 The mesh needs to be set up using the *blockMeshDict*. The mesh consits of three blocks in order
 to model the upstream and downstream portions as well as the wedge itself. The numbering order in which the 
@@ -32,7 +32,7 @@ describes the order in which the vertices should be listed. The second part of t
 describes the cell density within the block in each of the three directions. The last part is used
 when we want the mesh density to vary within the block.
 
-::_explanation:http://cfd.direct/openfoam/user-guide/blockmesh/
+.. _explanation: http://cfd.direct/openfoam/user-guide/blockmesh/
 
 We must also set the thermodynamic properties of the gas. In this case the properties have been chosen
 so that the gas has a ratio of specific heats of 1.4 and that, if the temperature is 1K, then the speed of sound
@@ -49,7 +49,8 @@ move to a viscous solver we must set a no slip boundary condition on the solid w
    :pyobject: write_initial_conditions
 
 The example script includes a :py:func:`main` function which performs all of
-these steps:
+these steps. A boolean value can be passed to :py:func:`main` in order to reduce the number of iterations
+and so speed up automatic testing.
 
 .. literalinclude:: ../examples/openfoam_supersonic_wedge.py
    :pyobject: main

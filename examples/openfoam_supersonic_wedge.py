@@ -3,8 +3,8 @@ Example which produces flow over a supersonic wedge
 
 >>> import os
 >>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cavity')
->>> main(case_dir)
->>> os.path.isdir(os.path.join(case_dir, '10'))
+>>> main(case_dir,True)
+>>> os.path.isdir(os.path.join(case_dir, '1'))
 True
 
 """
@@ -14,11 +14,17 @@ from cusfsim.case import (
     Case, Dimension, FileName, FileClass
 )
 
-def main(case_dir='wedge'):
+def main(case_dir='wedge', test_example=False):
     #Try to create new case directory
     case = create_new_case(case_dir)
     # Add the information needed by blockMesh.
-    write_initial_control_dict(case)
+    write_control_dict(case)
+
+    if test_example:
+        #We reduce the end time in order to speed up testing
+        with case.mutable_data_file(FileName.CONTROL) as d:
+            d.update({'endTime' : 1})
+
     write_block_mesh_dict(case)
     #we generate the mes1h
     case.run_tool('blockMesh')
@@ -41,7 +47,7 @@ def create_new_case(case_dir):
     #Creates the case
     return Case(case_dir)
 
-def write_initial_control_dict(case):
+def write_control_dict(case):
     """Sets up the control dictionary.
     In this example we use the rhoCentralFoam compressible solver"""
 
