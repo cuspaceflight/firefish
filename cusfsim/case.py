@@ -61,7 +61,7 @@ class FileName(enum.Enum):
     FV_SCHEMES = _sys_path('fvSchemes')
 
     #: transportProperties
-    TRANSPORT_PROPERTIES  = _constant_path('transportProperties')
+    TRANSPORT_PROPERTIES = _constant_path('transportProperties')
 
     #: thermoPhysicalProperties
     THERMOPHYSICAL_PROPERTIES = _constant_path('thermophysicalProperties')
