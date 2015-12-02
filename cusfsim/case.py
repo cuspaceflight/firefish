@@ -63,6 +63,13 @@ class FileName(enum.Enum):
     #: transportProperties
     TRANSPORT_PROPERTIES = _constant_path('transportProperties')
 
+    #: thermoPhysicalProperties
+    THERMOPHYSICAL_PROPERTIES = _constant_path('thermophysicalProperties')
+
+    #: turbulence Properties
+    TURBULENCE_PROPERTIES = _constant_path('turbulenceProperties')
+
+
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
 
