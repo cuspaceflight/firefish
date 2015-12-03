@@ -2,9 +2,9 @@
 Example which produces flow over a supersonic wedge
 
 >>> import os
->>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cavity')
->>> main(case_dir)
->>> os.path.isdir(os.path.join(case_dir, '10'))
+>>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'wedge')
+>>> main(case_dir,1)
+>>> os.path.isdir(os.path.join(case_dir, '1'))
 True
 
 """
@@ -14,11 +14,11 @@ from cusfsim.case import (
     Case, Dimension, FileName, FileClass
 )
 
-def main(case_dir='wedge'):
+def main(case_dir='wedge', n_iter=10):
     #Try to create new case directory
     case = create_new_case(case_dir)
     # Add the information needed by blockMesh.
-    write_initial_control_dict(case)
+    write_control_dict(case, n_iter)
     write_block_mesh_dict(case)
     #we generate the mes1h
     case.run_tool('blockMesh')
@@ -41,7 +41,7 @@ def create_new_case(case_dir):
     #Creates the case
     return Case(case_dir)
 
-def write_initial_control_dict(case):
+def write_control_dict(case, n_iter):
     """Sets up the control dictionary.
     In this example we use the rhoCentralFoam compressible solver"""
 
@@ -51,10 +51,10 @@ def write_initial_control_dict(case):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 10,
+        'endTime': n_iter,
         'deltaT': 0.001,
         'writeControl': 'runTime',
-        'writeInterval': 0.5,
+        'writeInterval': 1,
         'purgeWrite': 0,
         'writeFormat': 'ascii',
         'writePrecision': 6,
