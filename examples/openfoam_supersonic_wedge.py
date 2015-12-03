@@ -2,8 +2,8 @@
 Example which produces flow over a supersonic wedge
 
 >>> import os
->>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cavity')
->>> main(case_dir,True)
+>>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'wedge')
+>>> main(case_dir,1)
 >>> os.path.isdir(os.path.join(case_dir, '1'))
 True
 
@@ -14,17 +14,11 @@ from cusfsim.case import (
     Case, Dimension, FileName, FileClass
 )
 
-def main(case_dir='wedge', test_example=False):
+def main(case_dir='wedge', n_iter=10):
     #Try to create new case directory
     case = create_new_case(case_dir)
     # Add the information needed by blockMesh.
-    write_control_dict(case)
-
-    if test_example:
-        #We reduce the end time in order to speed up testing
-        with case.mutable_data_file(FileName.CONTROL) as d:
-            d.update({'endTime' : 1})
-
+    write_control_dict(case, n_iter)
     write_block_mesh_dict(case)
     #we generate the mes1h
     case.run_tool('blockMesh')
@@ -47,9 +41,14 @@ def create_new_case(case_dir):
     #Creates the case
     return Case(case_dir)
 
-def write_control_dict(case):
+def write_control_dict(case, n_iter):
     """Sets up the control dictionary.
     In this example we use the rhoCentralFoam compressible solver"""
+
+    if isinstance(n_iter, (int, long)) != True:
+        raise RuntimeError(
+                'Number of iterations must be an integer'
+            )
 
     # Control dict from tutorial
     control_dict = {
@@ -57,10 +56,10 @@ def write_control_dict(case):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 10,
+        'endTime': n_iter,
         'deltaT': 0.001,
         'writeControl': 'runTime',
-        'writeInterval': 0.5,
+        'writeInterval': 1,
         'purgeWrite': 0,
         'writeFormat': 'ascii',
         'writePrecision': 6,
