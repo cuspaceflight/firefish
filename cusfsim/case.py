@@ -72,6 +72,12 @@ class FileName(enum.Enum):
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
+    
+    Dimensions consist of the product of SI units, each unit being raise to a 
+    given exponent.
+    
+    Args:
+        PFDataStructs.Dimension: A tuple containing the exponents to be used for each SI unit. These are given in the order - kg, m ,s, K, mol, A, cd
 
     >>> d = Dimension(0, 1, -2, 0, 0, 0, 0)
     >>> str(d) # PyFOAM data file representation
