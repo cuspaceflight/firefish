@@ -73,6 +73,39 @@ class FileName(enum.Enum):
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
 
+    A dimension represents the units used to describe a physical value
+    e.g. one might measure velocity in metres per second or kilometres per hour.
+
+    In OpenFoam these dimensions must be built up from the standard SI units of
+    kilograms,  metres, seconds, Kelvins, moles, Amps and candelas.
+
+    To construct a dimension we raise each unit to a given exponent and
+    multiply them all together e.g. metres per second is m s :sup:`-1`
+
+    Some commonly used units such as the Newton are not SI. We must
+    therefore express them as a combination of SI units e.g. we know F=ma
+    and so the Newton must be kg m s :sup:`-2`
+
+    In order to do this in OpenFoam we must pass it a tuple containing
+    the list of exponents for each fundamental SI unit. These are given
+    in the order *kg, m, s, K, mol, A, cd*.
+
+    e.g. for acceleration (m s :sup:`-2` )
+
+    >>> d = Dimension(0, 1, -2, 0, 0, 0, 0)
+
+    e.g. for pressure (kg m :sup:`-1` s :sup:`-2` )
+
+    >>> d = Dimension(1, -1, -2, 0, 0, 0, 0)
+
+
+    Args:
+        PFDataStructs.Dimension: A tuple containing the exponents to be used
+                                 for each SI unit. These are
+                                 given in the order *kg, m ,s, K, mol, A, cd*
+
+    **Example usage:**
+
     >>> d = Dimension(0, 1, -2, 0, 0, 0, 0)
     >>> str(d) # PyFOAM data file representation
     '[ 0 1 -2 0 0 0 0 ]'
@@ -81,7 +114,7 @@ class Dimension(PFDataStructs.Dimension):
     >>> repr(d)
     'cusfsim.case.Dimension(0, 1, -2, 0, 0, 0, 0)'
 
-    It supports indexing and the sequence property
+    The class also supports indexing and the sequence property
 
     >>> d[2]
     -2
