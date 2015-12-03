@@ -45,7 +45,7 @@ def write_control_dict(case, n_iter):
     """Sets up the control dictionary.
     In this example we use the rhoCentralFoam compressible solver"""
 
-    if isinstance(n_iter, (int, long)) != True:
+    if isinstance(n_iter, int) != True:
         raise RuntimeError(
                 'Number of iterations must be an integer'
             )
