@@ -14,9 +14,9 @@ transliteration below.
 
 .. _initial example: http://cfd.direct/openfoam/user-guide/cavity/#x5-40002.1
 
-Firstly, we need to import some things from the :py:mod:`cusfsim.case` module::
+Firstly, we need to import some things from the :py:mod:`firefish.case` module::
 
-   from cusfsim.case import Case, FileName, FileClass
+   from firefish.case import Case, FileName, FileClass
 
 The :py:class:`~.case.Case` class encapsulates an OpenFOAM case
 directory. We don't want to overwrite an existing case and so we write a little
@@ -58,7 +58,7 @@ is one function call away::
 We're close to being able to run the *icoFoam* utility. The transport properties
 need to be defined::
 
-   from cusfsim.case import Dimension
+   from firefish.case import Dimension
 
    with case.mutable_data_file(FileName.TRANSPORT_PROPERTIES) as tp:
       tp['nu'] = (Dimension(0, 2, -1, 0, 0, 0, 0), 0.01)

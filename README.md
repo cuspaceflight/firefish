@@ -1,8 +1,8 @@
-# m3cfd
+# firefish
 
-[![Build Status](https://travis-ci.org/cuspaceflight/m3cfd.svg?branch=master)](https://travis-ci.org/cuspaceflight/m3cfd)
+[![Build Status](https://travis-ci.org/cuspaceflight/firefish.svg?branch=master)](https://travis-ci.org/cuspaceflight/firefish)
 [![Coverage
-Status](https://coveralls.io/repos/cuspaceflight/m3cfd/badge.svg?branch=master&service=github)](https://coveralls.io/github/cuspaceflight/m3cfd?branch=master)
+Status](https://coveralls.io/repos/cuspaceflight/firefish/badge.svg?branch=master&service=github)](https://coveralls.io/github/cuspaceflight/firefish?branch=master)
 
 CFD simulation software for Martlet 3
 
@@ -12,15 +12,15 @@ This software is primarily written in Python and may be installed via the
 standard ``pip`` utility:
 
 ```console
-$ pip install git+https://github.com/cuspaceflight/m3cfd.git
+$ pip install git+https://github.com/cuspaceflight/firefish.git
 ```
 
 For developers, `pip` can be used to create a "development" install which uses
 symlink magic to allow changes in files to be reflected without re-installing:
 
 ```console
-$ git clone git@github.com:cuspaceflight/m3cfd.git
-$ cd m3cfd
+$ git clone git@github.com:cuspaceflight/firefish.git
+$ cd firefish
 $ pip install -e .
 ```
 

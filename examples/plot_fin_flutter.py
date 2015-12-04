@@ -12,7 +12,7 @@ matplotlib.use('PDF')
 
 import numpy as np
 from matplotlib import pyplot as plt
-from cusfsim.finflutter import model_atmosphere, flutter_velocity
+from firefish.finflutter import model_atmosphere, flutter_velocity
 
 def main(output='flutter-velocity-example.pdf'):
     """

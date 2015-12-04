@@ -26,7 +26,7 @@ from PyFoam.RunDictionary.ParsedParameterFile import (
 ## EXCEPTIONS
 
 class CaseException(Exception):
-    """Base class for exceptions raised by cusfsim.case module."""
+    """Base class for exceptions raised by firefish.case module."""
 
 class CaseDoesNotExist(CaseException):
     """A case directory did not exist when we expected it to."""
@@ -112,7 +112,7 @@ class Dimension(PFDataStructs.Dimension):
     >>> d.unit
     'ms^-2'
     >>> repr(d)
-    'cusfsim.case.Dimension(0, 1, -2, 0, 0, 0, 0)'
+    'firefish.case.Dimension(0, 1, -2, 0, 0, 0, 0)'
 
     The class also supports indexing and the sequence property
 
@@ -148,7 +148,7 @@ class Dimension(PFDataStructs.Dimension):
 
 # Monkey-patch PyFOAM to ensure our Dimension type is returned from parsing
 # functions. This is not terribly elegant to say the least and isn't documented
-# but cusfsim tries very hard to hide PyFOAM's API from the user.
+# but firefish tries very hard to hide PyFOAM's API from the user.
 def _monkey_patch_pyfoam():
     from PyFoam.Basics.FoamFileGenerator import FoamFileGenerator
     import PyFoam.RunDictionary.ParsedParameterFile as ParsedParameterFileModule
