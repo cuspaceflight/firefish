@@ -1,3 +1,5 @@
+master line
+
 newline here
 
 hello again
