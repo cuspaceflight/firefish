@@ -13,7 +13,7 @@ function of altitude. These can then be plotted. For example:
 
     import matplotlib.pyplot as plt
     import numpy as np
-    from cusfsim import finflutter
+    from firefish import finflutter
 
     zs = np.linspace(0, 50000, 200)
     ps, _, ss = finflutter.model_atmosphere(zs)

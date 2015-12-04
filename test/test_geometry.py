@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pytest
 
-import cusfsim.geometry as geom
+import firefish.geometry as geom
 
 # Set this to be comparable to the tolerance at which we generate surfaces in
 # the test geometry.

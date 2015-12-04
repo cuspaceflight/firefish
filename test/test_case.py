@@ -6,8 +6,8 @@ import os
 
 import pytest
 
-import cusfsim.geometry
-from cusfsim.case import (
+import firefish.geometry
+from firefish.case import (
     Case, CaseDoesNotExist, Dimension, FileName, FileName, read_data_file,
     CaseToolRunFailed, CaseAlreadyExists
 )
@@ -17,7 +17,7 @@ def tmpcase(tmpdir):
     """An empty Case instance which has been created in a temporary directory.
 
     """
-    from cusfsim.case import Case
+    from firefish.case import Case
     case_dir = tmpdir.join('temp_case')
     return Case(case_dir.strpath)
 
@@ -25,7 +25,7 @@ def tmpcase(tmpdir):
 def unit_sphere_geometry(geomdir):
     """An stl.mesh.Mesh representing the unit sphere."""
     stl_path = os.path.join(geomdir, 'unit_sphere.stl')
-    return cusfsim.geometry.load(stl_path)
+    return firefish.geometry.load(stl_path)
 
 def _read_foam_dict(path):
     """Read foam dict file at path and return content."""

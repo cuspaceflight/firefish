@@ -11,7 +11,7 @@ def tmpcase(tmpdir):
     """An empty Case instance which has been created in a temporary directory.
 
     """
-    from cusfsim.case import Case
+    from firefish.case import Case
     case_dir = tmpdir.join('temp_case')
     return Case(case_dir.strpath)
 

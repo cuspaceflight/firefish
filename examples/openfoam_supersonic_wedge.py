@@ -10,7 +10,7 @@ True
 """
 
 import os
-from cusfsim.case import (
+from firefish.case import (
     Case, Dimension, FileName, FileClass
 )
 

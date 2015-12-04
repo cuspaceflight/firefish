@@ -15,7 +15,7 @@ else:
 # The find_packages function does a lot of the heavy lifting for us w.r.t.
 # discovering any Python packages we ship.
 setup(
-    name='cusfsim',
+    name='firefish',
     version='0.0.1dev',
     packages=find_packages(),
 
