@@ -31,12 +31,14 @@ def main(case_dir='cylinder', n_iter=10):
     #case.run_tool('mirrorMesh')
     #modify_mirror_axes(case)
     #case.run_tool('mirrorMesh')
+    
     #we prepare the thermophysical and turbulence properties
-    #write_thermophysical_properties(case)
-    #write_turbulence_properties(case)
+    write_thermophysical_properties(case)
+    write_turbulence_properties(case)
     #we write fvScheme and fvSolution
-    #write_fv_schemes(case)
-    #write_fv_solution(case)
+    write_fv_schemes(case)
+    write_fv_solution(case)
+    
     #write_initial_conditions(case)
     #case.run_tool('rhoCentralFoam')
 
@@ -101,8 +103,8 @@ def write_block_mesh_dict(case):
 
             'arc', (3, 0), [0.3536, 0.3536, 0],
             'arc', (4, 7), [0.3536, 0.3536, 0.05],
-            'arc', (1, 2), [0.3536, 0.3536, 0],
-            'arc', (5, 6), [0.3536, 0.3536, 0.05],
+            'arc', (1, 2), [17.68, 17.68, 0],
+            'arc', (5, 6), [17.68, 17.68, 0.05],
         ],
 
         # Note the odd way in which boundary is defined here as a
@@ -133,6 +135,55 @@ def write_block_mesh_dict(case):
     with case.mutable_data_file(FileName.BLOCK_MESH) as d:
         d.update(block_mesh_dict)
 
+def write_thermophysical_properties(case):
+    """Sets the thermdynamic properties of the gas to match that of (dry) air"""
+    thermo_dict = {
+        'thermoType' : {'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
+                        'transport' : 'const', 'thermo'  : 'hConst',
+                        'equationOfState' : 'perfectGas', 'specie' : 'specie',
+                        'energy' : 'sensibleEnthalpy'},
+        'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 28.96},
+                      'thermodynamics' : {'Cp' : 1004.5, 'Hf' : 2.544e+06},
+                      'transport' : {'mu' : 1.8e-05, 'Pr' : 0.7}}}
+    with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
+        d.update(thermo_dict)
+
+def write_turbulence_properties(case):
+    """Disables the turbulent solver for now"""
+    turbulence_dict = {
+        'simulationType' : 'laminar'}
+    with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
+        d.update(turbulence_dict)
+
+def write_fv_schemes(case):
+    """Sets fv_schemes"""
+    fv_schemes = {
+        'ddtSchemes'  : {'default' : 'Euler'},
+        'gradSchemes' : {'default' : 'Gauss linear'},
+        'divSchemes'  : {'default' : 'none', 'div(tauMC)' : 'Gauss linear'},
+        'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
+        'interpolationSchemes' : {'default' : 'linear',
+                                  'reconstruct(rho)' : 'vanLeer',
+                                  'reconstruct(U)' : 'vanLeerV',
+                                  'reconstruct(T)': 'vanLeer'},
+        'snGradSchemes' : {'default': 'corrected'}}
+    with case.mutable_data_file(FileName.FV_SCHEMES) as d:
+        d.update(fv_schemes)
+
+def write_fv_solution(case):
+    """Sets fv_solution"""
+    fv_solution = {
+        'solvers' : {'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
+                     'U' : {'solver'  : 'smoothSolver',
+                            'smoother' : 'GaussSeidel',
+                            'nSweeps' : 2,
+                            'tolerance' : 1e-09,
+                            'relTol' : 0.01},
+                     'h' : {'$U' : ' ',
+                            'tolerance' : 1e-10,
+                            'relTol' : 0}}}
+    with case.mutable_data_file(FileName.FV_SOLUTION) as d:
+        d.update(fv_solution)
 
 if __name__ == '__main__':
     main()
