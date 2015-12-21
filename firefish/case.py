@@ -54,6 +54,9 @@ class FileName(enum.Enum):
     #: blockMeshDict
     BLOCK_MESH = _sys_path('blockMeshDict')
 
+    #: mirrorMeshDict
+    MIRROR_MESH = _sys_path('mirrorMeshDict')
+
     #: fvSolution
     FV_SOLUTION = _sys_path('fvSolution')
 
