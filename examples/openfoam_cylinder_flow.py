@@ -27,10 +27,11 @@ def main(case_dir='cylinder', n_iter=10):
     #we generate the mesh
     case.run_tool('blockMesh')
     
-    #write_mirror_mesh_dict(case)
-    #case.run_tool('mirrorMesh')
-    #modify_mirror_axes(case)
-    #case.run_tool('mirrorMesh')
+    write_mirror_mesh_dict(case, [1, 0, 0])
+    #mirror the quarter cylinder, need to run with -noFunctionObjects
+    case.run_tool('mirrorMesh')
+    write_mirror_mesh_dict(case, [0, 1, 0])
+    case.run_tool('mirrorMesh')
     
     #we prepare the thermophysical and turbulence properties
     write_thermophysical_properties(case)
@@ -134,6 +135,17 @@ def write_block_mesh_dict(case):
 
     with case.mutable_data_file(FileName.BLOCK_MESH) as d:
         d.update(block_mesh_dict)
+
+def write_mirror_mesh_dict(case, normalLine):
+    """defines the axes for mirroring the quarter cylinder"""
+    mirror_mesh_dict = {
+        'planeType' : 'pointAndNormal',
+        'pointAndNormalDict' : {'basePoint':[0,0,0], 'normalVector':normalLine},
+        'planeTolerance' : 1e-06
+        }
+
+    with case.mutable_data_file(FileName.MIRROR_MESH) as d:
+        d.update(mirror_mesh_dict)
 
 def write_thermophysical_properties(case):
     """Sets the thermdynamic properties of the gas to match that of (dry) air"""
