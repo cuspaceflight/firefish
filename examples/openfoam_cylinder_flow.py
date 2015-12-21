@@ -40,8 +40,8 @@ def main(case_dir='cylinder', n_iter=10):
     write_fv_schemes(case)
     write_fv_solution(case)
     
-    #write_initial_conditions(case)
-    #case.run_tool('rhoCentralFoam')
+    write_initial_conditions(case)
+    case.run_tool('rhoCentralFoam')
 
 def create_new_case(case_dir):
     """Creates new case directory"""
@@ -63,8 +63,8 @@ def write_control_dict(case, n_iter):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': n_iter,
-        'deltaT': 0.00003,
+        'endTime': 0.1,
+        'deltaT': 0.00005,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
         'purgeWrite': 0,
@@ -86,7 +86,7 @@ def write_block_mesh_dict(case):
     """Writes the block mesh"""
     block_mesh_dict = {
   
-        'convertToMeters': 1,
+        'convertToMeters': 10,
 
         'vertices': [
             [0.5, 0, 0], [25, 0, 0], [0, 25, 0], [0, 0.5, 0],
@@ -163,22 +163,31 @@ def write_thermophysical_properties(case):
 def write_turbulence_properties(case):
     """Disables the turbulent solver for now"""
     turbulence_dict = {
-        'simulationType' : 'laminar'}
+        'simulationType' : 'RAS',
+        'RAS' : {'RASModel' : 'SpalartAllmaras', 'turbulence': 'on',
+                 'printCoeffs' : 'on'}
+        }
     with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
         d.update(turbulence_dict)
 
 def write_fv_schemes(case):
     """Sets fv_schemes"""
     fv_schemes = {
+        'fluxScheme' : 'Kurganov',
         'ddtSchemes'  : {'default' : 'Euler'},
-        'gradSchemes' : {'default' : 'Gauss linear'},
-        'divSchemes'  : {'default' : 'none', 'div(tauMC)' : 'Gauss linear'},
+        'gradSchemes' : {'default' : 'Gauss'},
+        'divSchemes'  : {'default' : 'none', 'div(tauMC)' : 'Gauss linear',
+                        'div(phi,U)': 'bounded Gauss linearUpwind grad(U)',
+                        'div(phi,nuTilda)':'bounded Gauss linearUpwind gradu(nuTilda)',
+                        'div((nuEff*dev2(T(grad(U)))))':'Gauss linear'},
         'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
         'interpolationSchemes' : {'default' : 'linear',
                                   'reconstruct(rho)' : 'vanLeer',
                                   'reconstruct(U)' : 'vanLeerV',
                                   'reconstruct(T)': 'vanLeer'},
-        'snGradSchemes' : {'default': 'corrected'}}
+        'snGradSchemes' : {'default': 'corrected'},
+        'wallDist' : {'method':'meshWave'}
+    }
     with case.mutable_data_file(FileName.FV_SCHEMES) as d:
         d.update(fv_schemes)
 
@@ -186,16 +195,162 @@ def write_fv_solution(case):
     """Sets fv_solution"""
     fv_solution = {
         'solvers' : {'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
-                     'U' : {'solver'  : 'smoothSolver',
+                     '"(U|e)"' : {'solver'  : 'smoothSolver',
                             'smoother' : 'GaussSeidel',
                             'nSweeps' : 2,
                             'tolerance' : 1e-09,
                             'relTol' : 0.01},
                      'h' : {'$U' : ' ',
                             'tolerance' : 1e-10,
-                            'relTol' : 0}}}
+                            'relTol' : 0},
+                    'nuTilda': {'solver' : 'smoothSolver',
+                                'smoother': 'GaussSeidel',
+                                'nSweeps':2,
+                                'tolerance':1e-08,
+                                'relTol':0.1}
+                    }
+    }
     with case.mutable_data_file(FileName.FV_SOLUTION) as d:
         d.update(fv_solution)
+
+def write_initial_conditions(case):
+    """Sets the intial conditions"""
+    #creates the p initial conditions
+    p_file = case.mutable_data_file(
+        '0/p', create_class = FileClass.SCALAR_FIELD_3D
+    )
+    with p_file as p:
+        p.update({
+            'dimensions': Dimension(1, -1, -2, 0, 0, 0, 0),
+            'internalField': ('uniform', 100000),
+            'boundaryField': {
+                'cylinder' : {
+                    'type' : 'zeroGradient'
+                },
+                'outerRim' : {
+                    'type' : 'outletInlet',
+                    'outletValue' : ('uniform', 100000)
+                },
+                'frontAndBack' : {
+                    'type' : 'empty'
+                },
+            },
+        })
+
+    #create U initial conditions
+    U_file = case.mutable_data_file(
+        '0/U', create_class = FileClass.VECTOR_FIELD_3D
+    )
+
+    with U_file as U:
+        U.update({
+            'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
+            'internalField': ('uniform', [300, 0, 0]),
+            'boundaryField': {
+                'cylinder' : {
+                    'type' : 'fixedValue',
+                    'value' : ('uniform', [0, 0, 0] )
+                },
+                'outerRim' : {
+                    'type' : 'inletOutlet',
+                    'inletValue' : ('uniform', [300, 0, 0]),
+                },
+                'frontAndBack' : {
+                    'type' : 'empty'
+                },
+            },
+        })
+
+    #create T initial conditions
+    T_file = case.mutable_data_file(
+        '0/T', create_class = FileClass.SCALAR_FIELD_3D        
+    )
+
+    with T_file as T:
+        T.update({
+            'dimensions': Dimension(0, 0, 0, 1, 0, 0, 0),
+            'internalField' : ('uniform', 273),
+            'boundaryField' : {
+                'cylinder':{
+                    'type' : 'zeroGradient'
+                },
+                'outerRim':{
+                    'type' : 'zeroGradient'
+                },
+                'frontAndBack':{
+                    'type' : 'empty'
+                },
+            },
+        })
+
+    nut_file = case.mutable_data_file(
+        '0/nut', create_class = FileClass.SCALAR_FIELD_3D
+    )
+
+    with nut_file as nut:
+        nut.update({
+            'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
+            'internalField' : ('uniform', 0.14),
+            'boundaryField' : {
+                'cylinder':{
+                    'type' : 'zeroGradient',
+                    'value': ('uniform', 0.14)
+                },
+                'outerRim':{
+                    'type' : 'freestream',
+                    'freestreamValue' : ('uniform', 0.14)
+                },
+                'frontAndBack':{
+                    'type' : 'empty'
+                },
+            },
+        })
+
+    nuTilda_file = case.mutable_data_file(
+        '0/nuTilda', create_class = FileClass.SCALAR_FIELD_3D
+    )
+    
+    with nuTilda_file as nuTilda:
+        nuTilda.update({
+            'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
+            'internalField' : ('uniform', 0.14),
+            'boundaryField' : {
+                'cylinder':{
+                    'type' : 'zeroGradient',
+                    'value': ('uniform', 0)
+                },
+                'outerRim':{
+                    'type' : 'freestream',
+                    'freestreamValue' : ('uniform', 0.14)
+                },
+                'frontAndBack':{
+                    'type' : 'empty'
+                },
+            },
+        })
+
+    alphat_file = case.mutable_data_file(
+        '0/alphat', create_class = FileClass.SCALAR_FIELD_3D
+    )
+
+    with alphat_file as alphat:
+        alphat.update({
+            'dimensions': Dimension(1, -1, -1, 0, 0, 0, 0),
+            'internalField' : ('uniform', 0),
+            'boundaryField' : {
+                'cylinder':{
+                    'type' : 'calculated',
+                    'value': ('uniform', 0)
+                },
+                'outerRim':{
+                    'type' : 'calculated',
+                    'freestreamValue' : ('uniform', 0)
+                },
+                'frontAndBack':{
+                    'type' : 'empty'
+                },
+            },
+        })
 
 if __name__ == '__main__':
     main()
