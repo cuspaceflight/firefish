@@ -1,9 +1,14 @@
 """
 Calculation of fin flutter vs. altitude.
 
-.. todo::
+The transonic flutter velocity code comes from "Peak of flight" newsletter
+issue 291, which is itself a modified version of the equation in
+NACA paper 4197.
 
-    document where this comes from and how it is derived.
+The supersonic flutter criterion is from a thesis by J. Simmons at the 
+Air Force Institute of Technology, Ohio. (AFIT/GSS/ENY/09-J02), the torsional and
+bending frequencies have to be calculated for different geometries using
+finite element analysis in Solidworks.
 
 This module provides a simple API for computing fin-flutter velocity as a
 function of altitude. These can then be plotted. For example:
@@ -41,7 +46,7 @@ def model_atmosphere(altitudes):
         altitudes (np.array): 1-d array of geopotential altitudes in metres
 
     Returns:
-        A triple giving corresponding 1-d arrays of estimated pressure,
+        A giving corresponding 1-d arrays of estimated pressure,
         temperature and speed of sound. Units are Pascals, Celsius and m/s
         respectively.
 
@@ -86,11 +91,12 @@ def model_atmosphere(altitudes):
     return ps, ts, ss
 
 
-def flutter_velocity(pressures, speeds_of_sound,
+def flutter_velocity_transonic(pressures, speeds_of_sound,
                      root_chord, tip_chord, semi_span, thickness,
                      shear_modulus=2.62e9):
-    """Calculate flutter velocities for a given fin design.
-
+    """Calculate transonic flutter velocities for a given fin design.
+    The equation is valid if the rocket is travelling at < M2.5 at the 
+    given altitude.
 
     Fin dimensions are given via the root_chord, tip_chord, semi_span and
     thickness arguments. All dimensions are in centimetres.
@@ -132,3 +138,48 @@ def flutter_velocity(pressures, speeds_of_sound,
 
     return Vf
 
+def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_frequency, 
+                    mass, semi_span, radius_of_gyration, distance_to_COG, Mach_number):
+    
+    """
+    Calculate transonic flutter velocities for a given fin design.
+    The equation is valid for freestream flow in the supersonic regime
+    (>~M2.5)
+
+    Fin analysis have to be done for Solidworks in order to find the 
+    frequencies for bending and torsional modes, as well as the radius_of_gyration 
+    and distance_to_COG. Torsional and bending frequency are in rad/s, the semi-span
+    will be given in metres.
+
+    >>> import numpy as np
+    >>> zs = np.linspace(0, 30000, 100)
+    >>> rhos = model_atmosphere(zs)
+    >>> vels = flutter_velocity(rhos, 380, 40, 1, 0.1, 0.2, 0.1, 3)
+    >>> assert vels.shape == ps.shape
+
+    Args:
+        semi_span: fin semi-span (m)
+        air_densities: 1-d array of air density in kg/m^3  (np.array)
+        torsional frequency: uncoupled torsional frequency (rad/s) 
+        bending_frequency: uncoupled bending frequency of the fin (rad/s)
+        mass: mass of fin (kg)
+        Mach_number: mach number of rocket
+        distance_to_COG: distance of COG to axis of rotation (m)
+        radius_of_gyration: distance at which all the mass of the fin
+                            can be though to be concenreated, =sqrt(I/M)
+
+    Returns:
+        A 1-d array containing corresponding flutter velocities in m/s.
+    """
+
+    air_densities = np.atleast_1d(air_densities).astype(np.float)
+    #mass ratio
+    mr = mass / semi_span 
+    A = (mr * radius_of_gyration**2 * np.sqrt(Mach_number**2 - 1)) / (distance_to_COG * semi_span)
+    #frequency ratio squared
+    fr2 = (bending_frequency / torsional_frequency)**2
+    B = (1-fr2)**2 + 4(distance_to_COG/radius_of_gyration)**2 * fr2
+    C = 2*(1+fr2**2)
+    Vf = semi_span * torsional_frequency * sqrt(A*B/C)
+
+    return Vf
