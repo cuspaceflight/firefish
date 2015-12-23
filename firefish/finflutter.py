@@ -171,10 +171,10 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
     Returns:
         A 1-d array containing corresponding flutter velocities in m/s.
     """
-
+    Vf = np.zeros_like(air_densities)
     air_densities = np.atleast_1d(air_densities).astype(np.float)
     #mass ratio
-    mr = mass / semi_span 
+    mr = mass / (air_densities * semi_span**2) 
     A = (mr * radius_of_gyration**2 * np.sqrt(Mach_number**2 - 1)) / (distance_to_COG * semi_span)
     #frequency ratio squared
     fr2 = (bending_frequency / torsional_frequency)**2
