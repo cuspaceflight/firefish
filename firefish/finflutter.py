@@ -5,7 +5,7 @@ The transonic flutter velocity code comes from "Peak of flight" newsletter
 issue 291, which is itself a modified version of the equation in
 NACA paper 4197.
 
-The supersonic flutter criterion is from a thesis by J. Simmons at the 
+The supersonic flutter criterion is from a thesis by J. Simmons at the
 Air Force Institute of Technology, Ohio. (AFIT/GSS/ENY/09-J02), the torsional and
 bending frequencies have to be calculated for different geometries using
 finite element analysis in Solidworks.
@@ -22,9 +22,8 @@ function of altitude. These can then be plotted. For example:
 
     zs = np.linspace(0, 50000, 200)
     ps, _, ss = finflutter.model_atmosphere(zs)
-    vs = finflutter.flutter_velocity(
-        ps, ss, root_chord=20, tip_chord=10, semi_span=10, thickness=0.2
-    )
+    vs = finflutter.flutter_velocity_transonic(ps, ss, root_chord=20, +
+        tip_chord=10, semi_span=10, thickness=0.2)
 
     plt.plot(zs * 1e-3, vs)
     plt.grid()
@@ -95,7 +94,7 @@ def flutter_velocity_transonic(pressures, speeds_of_sound,
                      root_chord, tip_chord, semi_span, thickness,
                      shear_modulus=2.62e9):
     """Calculate transonic flutter velocities for a given fin design.
-    The equation is valid if the rocket is travelling at < M2.5 at the 
+    The equation is valid if the rocket is travelling at < M2.5 at the
     given altitude.
 
     Fin dimensions are given via the root_chord, tip_chord, semi_span and
@@ -107,7 +106,7 @@ def flutter_velocity_transonic(pressures, speeds_of_sound,
     >>> import numpy as np
     >>> zs = np.linspace(0, 30000, 100)
     >>> ps, _, ss = model_atmosphere(zs)
-    >>> vels = flutter_velocity(ps, ss, 20, 10, 10, 0.2)
+    >>> vels = flutter_velocity_transonic(ps, ss, 20, 10, 10, 0.2)
     >>> assert vels.shape == ps.shape
 
     Args:
@@ -138,29 +137,29 @@ def flutter_velocity_transonic(pressures, speeds_of_sound,
 
     return Vf
 
-def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_frequency, 
+def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_frequency,
                     mass, semi_span, radius_of_gyration, distance_to_COG, Mach_number):
-    
-    """
-    Calculate transonic flutter velocities for a given fin design.
+
+    """Calculate transonic flutter velocities for a given fin design.
     The equation is valid for freestream flow in the supersonic regime
     (>~M2.5)
 
-    Fin analysis have to be done for Solidworks in order to find the 
-    frequencies for bending and torsional modes, as well as the radius_of_gyration 
+    Fin analysis have to be done for Solidworks in order to find the
+    frequencies for bending and torsional modes, as well as the radius_of_gyration
     and distance_to_COG. Torsional and bending frequency are in rad/s, the semi-span
     will be given in metres.
 
     >>> import numpy as np
     >>> zs = np.linspace(0, 30000, 100)
-    >>> rhos = model_atmosphere(zs)
-    >>> vels = flutter_velocity(rhos, 380, 104, 1, 0.1, 0.2, 0.1, 3)
+   > >> ps, ts, ss = model_atmosphere(zs)
+    >>> rhos = (ps/1000) / (0.2869 * (ts + 273.1))
+    >>> vels = flutter_velocity_supersonic(rhos, 380, 104, 1, 0.1, 0.2, 0.1, 3)
     >>> assert vels.shape == ps.shape
 
     Args:
         semi_span: fin semi-span (m)
         air_densities: 1-d array of air density in kg/m^3  (np.array)
-        torsional frequency: uncoupled torsional frequency (rad/s) 
+        torsional frequency: uncoupled torsional frequency (rad/s)
         bending_frequency: uncoupled bending frequency of the fin (rad/s)
         mass: mass of fin (kg)
         Mach_number: mach number of rocket
@@ -174,7 +173,7 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
     Vf = np.zeros_like(air_densities)
     air_densities = np.atleast_1d(air_densities).astype(np.float)
     #mass ratio
-    mr = mass / (air_densities * semi_span**2) 
+    mr = mass / (air_densities * semi_span**2)
     A = (mr * radius_of_gyration**2 * np.sqrt(Mach_number**2 - 1)) / (distance_to_COG * semi_span)
     #frequency ratio squared
     fr2 = (bending_frequency / torsional_frequency)**2
