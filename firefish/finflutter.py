@@ -154,7 +154,7 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
     >>> import numpy as np
     >>> zs = np.linspace(0, 30000, 100)
     >>> rhos = model_atmosphere(zs)
-    >>> vels = flutter_velocity(rhos, 380, 40, 1, 0.1, 0.2, 0.1, 3)
+    >>> vels = flutter_velocity(rhos, 380, 104, 1, 0.1, 0.2, 0.1, 3)
     >>> assert vels.shape == ps.shape
 
     Args:
@@ -178,8 +178,8 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
     A = (mr * radius_of_gyration**2 * np.sqrt(Mach_number**2 - 1)) / (distance_to_COG * semi_span)
     #frequency ratio squared
     fr2 = (bending_frequency / torsional_frequency)**2
-    B = (1-fr2)**2 + 4(distance_to_COG/radius_of_gyration)**2 * fr2
+    B = (1-fr2)**2 + 4*(distance_to_COG/radius_of_gyration)**2 * fr2
     C = 2*(1+fr2**2)
-    Vf = semi_span * torsional_frequency * sqrt(A*B/C)
+    Vf = semi_span * torsional_frequency * np.sqrt(A*B/C)
 
     return Vf
