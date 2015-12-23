@@ -23,7 +23,7 @@ def main(output='flutter-velocity-example.pdf'):
     >>> assert fobj.getvalue()[:4] == b'%PDF'
 
     """
-    zs = np.linspace(0, 50000, 200)
+    zs = np.linspace(0, 20000, 200)
     ps, ts, ss = model_atmosphere(zs)
     rhos = (ps/1000) / (0.2869 * (ts + 273.1))
     vs_t = flutter_velocity_transonic(ps, ss, 20, 10, 10, 0.2)
