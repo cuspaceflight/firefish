@@ -91,8 +91,8 @@ def model_atmosphere(altitudes):
 
 
 def flutter_velocity_transonic(pressures, speeds_of_sound,
-                     root_chord, tip_chord, semi_span, thickness,
-                     shear_modulus=2.62e9):
+                              root_chord, tip_chord, semi_span, thickness,
+                              shear_modulus=2.62e9):
     """Calculate transonic flutter velocities for a given fin design.
     The equation is valid if the rocket is travelling at < M2.5 at the
     given altitude.
@@ -138,7 +138,7 @@ def flutter_velocity_transonic(pressures, speeds_of_sound,
     return Vf
 
 def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_frequency,
-                    mass, semi_span, radius_of_gyration, distance_to_COG, Mach_number):
+                                mass, semi_span, radius_of_gyration, distance_to_COG, Mach_number):
 
     """Calculate transonic flutter velocities for a given fin design.
     The equation is valid for freestream flow in the supersonic regime
@@ -151,7 +151,7 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
 
     >>> import numpy as np
     >>> zs = np.linspace(0, 30000, 100)
-   > >> ps, ts, ss = model_atmosphere(zs)
+    >>> ps, ts, ss = model_atmosphere(zs)
     >>> rhos = (ps/1000) / (0.2869 * (ts + 273.1))
     >>> vels = flutter_velocity_supersonic(rhos, 380, 104, 1, 0.1, 0.2, 0.1, 3)
     >>> assert vels.shape == ps.shape
