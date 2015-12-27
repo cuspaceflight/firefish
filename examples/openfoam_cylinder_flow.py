@@ -11,6 +11,11 @@ symmetrical geometries, and application of the Spalart-Allmaras turbulent model.
 >>> os.path.isdir(os.path.join(case_dir, '1'))
 True
 
+Plan 27.12.15
+Integrate drag coefficient calculation
+Look into how to reduce computation time without compromising Courant number
+Add U as a parameter into the initial conditions function, so that a suites of
+tests can be run
 """
 
 import os
@@ -77,6 +82,31 @@ def write_control_dict(case, n_iter):
         'adjustTimeStep' : 'no',
         'maxCo' : 1,
         'maxDeltaT' : 1e-6,
+
+        'functions': {
+        	'forceCoefficients': {
+        		'type' : 'forceCeffs',
+        		'functionObjectLibs' : ['"libforces.so"'],
+        		'log' : 'yes',
+        		'patches' : ['cylinder'],
+        		'dragDir':  [1, 0, 0],
+        		'liftDir': [0, 1, 0],
+        		'pitchAxis': [0, 0, 1],
+        		'magUInf': 300,
+        		'lRef': 1,
+        		'Aref': 1,
+
+        		'rhoName': 'rhoInf',
+        		'rhoInf': 1,
+        		'origin': [0, 0, 0],
+        		'coordinateRotation': {
+        			'type':'EulerRotation',
+        			'degrees': 'true',
+        			'rotation': [0,0,0],
+        		}
+
+        	}
+        }
     }
 
     with case.mutable_data_file(FileName.CONTROL) as d:
@@ -161,7 +191,7 @@ def write_thermophysical_properties(case):
         d.update(thermo_dict)
 
 def write_turbulence_properties(case):
-    """Disables the turbulent solver for now"""
+    """Use the Sparlart Allmaras turbulence model"""
     turbulence_dict = {
         'simulationType' : 'RAS',
         'RAS' : {'RASModel' : 'SpalartAllmaras', 'turbulence': 'on',
