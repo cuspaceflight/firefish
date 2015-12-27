@@ -91,8 +91,8 @@ def model_atmosphere(altitudes):
 
 
 def flutter_velocity_transonic(pressures, speeds_of_sound,
-                              root_chord, tip_chord, semi_span, thickness,
-                              shear_modulus=2.62e9):
+                               root_chord, tip_chord, semi_span, thickness,
+                               shear_modulus=2.62e9):
     """Calculate transonic flutter velocities for a given fin design.
     The equation is valid if the rocket is travelling at < M2.5 at the
     given altitude.
@@ -146,8 +146,8 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
 
     Fin analysis have to be done for Solidworks in order to find the
     frequencies for bending and torsional modes, as well as the radius_of_gyration
-    and distance_to_COG. Torsional and bending frequency are in rad/s, the semi-span
-    will be given in metres.
+    and distance_to_COG. Torsional and bending frequency are in rad/s, the semi-span,
+    radius of gyration, and distance to COG will be given in metres.
 
     >>> import numpy as np
     >>> zs = np.linspace(0, 30000, 100)
@@ -178,7 +178,7 @@ def flutter_velocity_supersonic(air_densities, torsional_frequency, bending_freq
     #frequency ratio squared
     fr2 = (bending_frequency / torsional_frequency)**2
     B = (1-fr2)**2 + 4*(distance_to_COG/radius_of_gyration)**2 * fr2
-    C = 2*(1+fr2**2)
+    C = 2*(1+fr2)
     Vf = semi_span * torsional_frequency * np.sqrt(A*B/C)
 
     return Vf
