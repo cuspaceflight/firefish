@@ -34,9 +34,9 @@ def main(case_dir='cylinder', n_iter=10):
     
     write_mirror_mesh_dict(case, [1, 0, 0])
     #mirror the quarter cylinder, need to run with -noFunctionObjects
-    case.run_tool('mirrorMesh')
+    case.run_tool('mirrorMesh', '-noFunctionObjects')
     write_mirror_mesh_dict(case, [0, 1, 0])
-    case.run_tool('mirrorMesh')
+    case.run_tool('mirrorMesh', '-noFunctionObjects')
     
     #we prepare the thermophysical and turbulence properties
     write_thermophysical_properties(case)
@@ -85,7 +85,7 @@ def write_control_dict(case, n_iter):
 
         'functions': {
         	'forceCoefficients': {
-        		'type' : 'forceCeffs',
+        		'type' : 'forceCoeffs',
         		'functionObjectLibs' : ['"libforces.so"'],
         		'log' : 'yes',
         		'patches' : ['cylinder'],
