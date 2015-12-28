@@ -71,7 +71,7 @@ class FileName(enum.Enum):
 
     #: turbulence Properties
     TURBULENCE_PROPERTIES = _constant_path('turbulenceProperties')
-
+    
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.

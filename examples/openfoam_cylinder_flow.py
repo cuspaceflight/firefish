@@ -10,10 +10,6 @@ symmetrical geometries, and application of the Spalart-Allmaras turbulent model.
 >>> main(case_dir,1)
 >>> os.path.isdir(os.path.join(case_dir, '1'))
 True
-
-Plan 27.12.15
-Add U as a parameter into the initial conditions function, so that a suites of
-tests can be run
 """
 
 import os
@@ -22,33 +18,40 @@ from firefish.case import (
 )
 from matplotlib import pyplot as plt
 import numpy as np
+import shutil
 
 def main(case_dir='cylinder', n_iter=10):
 	#set an initial speed, this can be changed each time the case is run
-	initial_speed = 300
+	for initial_speed in range(10, 360, 50):
     #Try to create new case directory
-	case = create_new_case(case_dir)
-    # Add the information needed by blockMesh.
-	write_control_dict(case, n_iter, initial_speed)
-	write_block_mesh_dict(case)
-	#we generate the mesh
-	case.run_tool('blockMesh')
-	
-	write_mirror_mesh_dict(case, [1, 0, 0])
-	#mirror the quarter cylinder, need to run with -noFunctionObjects
-	case.run_tool('mirrorMesh', '-noFunctionObjects')
-	write_mirror_mesh_dict(case, [0, 1, 0])
-	case.run_tool('mirrorMesh', '-noFunctionObjects')
-	
-	#we prepare the thermophysical and turbulence properties
-	write_thermophysical_properties(case)
-	write_turbulence_properties(case)
-	#we write fvScheme and fvSolution
-	write_fv_schemes(case)
-	write_fv_solution(case)
-    
-	write_initial_conditions(case, initial_speed)
-	case.run_tool('rhoCentralFoam')
+		case = create_new_case(case_dir)
+		# Add the information needed by blockMesh.
+		write_control_dict(case, n_iter, initial_speed)
+		write_block_mesh_dict(case)
+		#we generate the mesh
+		case.run_tool('blockMesh')
+		
+		write_mirror_mesh_dict(case, [1, 0, 0])
+		#mirror the quarter cylinder, need to run with -noFunctionObjects
+		case.run_tool('mirrorMesh', '-noFunctionObjects')
+		write_mirror_mesh_dict(case, [0, 1, 0])
+		case.run_tool('mirrorMesh', '-noFunctionObjects')
+		
+		#we prepare the thermophysical and turbulence properties
+		write_thermophysical_properties(case)
+		write_turbulence_properties(case)
+		#we write fvScheme and fvSolution
+		write_fv_schemes(case)
+		write_fv_solution(case)
+		write_initial_conditions(case, initial_speed)
+		case.run_tool('rhoCentralFoam')
+		
+		forceCoeffs_path = case_dir + '/postProcessing/forceCoefficients/0/forceCoeffs.dat'
+		coeffs = np.loadtxt(forceCoeffs_path, skiprows = 9)
+		Cd_final = coeffs[:,2][-1]
+		print str(initial_speed) + "\t" + str(Cd_final) + "\n"
+		shutil.rmtree(case_dir)
+
 
 def create_new_case(case_dir):
     """Creates new case directory"""
@@ -70,7 +73,7 @@ def write_control_dict(case, n_iter, initial_speed):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 0.30,
+        'endTime': 0.01,
         'deltaT': 0.00035,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
