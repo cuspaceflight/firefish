@@ -49,7 +49,9 @@ def main(case_dir='cylinder', n_iter=10):
 		forceCoeffs_path = case_dir + '/postProcessing/forceCoefficients/0/forceCoeffs.dat'
 		coeffs = np.loadtxt(forceCoeffs_path, skiprows = 9)
 		Cd_final = coeffs[:,2][-1]
-		print str(initial_speed) + "\t" + str(Cd_final) + "\n"
+		#Reynolds number
+		Re = 10*1*initial_speed/(1.8e-05)
+		print str(initial_speed) + "\t" + str(Re) + "\t" + str(Cd_final) + "\n"
 		shutil.rmtree(case_dir)
 
 
@@ -73,7 +75,7 @@ def write_control_dict(case, n_iter, initial_speed):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 0.01,
+        'endTime': 0.15,
         'deltaT': 0.00035,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
