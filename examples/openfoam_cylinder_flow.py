@@ -12,8 +12,6 @@ symmetrical geometries, and application of the Spalart-Allmaras turbulent model.
 True
 
 Plan 27.12.15
-Integrate drag coefficient calculation
-Look into how to reduce computation time without compromising Courant number
 Add U as a parameter into the initial conditions function, so that a suites of
 tests can be run
 """
@@ -22,31 +20,35 @@ import os
 from firefish.case import (
     Case, Dimension, FileName, FileClass
 )
+from matplotlib import pyplot as plt
+import numpy as np
 
 def main(case_dir='cylinder', n_iter=10):
+	#set an initial speed, this can be changed each time the case is run
+	initial_speed = 300
     #Try to create new case directory
-    case = create_new_case(case_dir)
+	case = create_new_case(case_dir)
     # Add the information needed by blockMesh.
-    write_control_dict(case, n_iter)
-    write_block_mesh_dict(case)
-    #we generate the mesh
-    case.run_tool('blockMesh')
+	write_control_dict(case, n_iter, initial_speed)
+	write_block_mesh_dict(case)
+	#we generate the mesh
+	case.run_tool('blockMesh')
+	
+	write_mirror_mesh_dict(case, [1, 0, 0])
+	#mirror the quarter cylinder, need to run with -noFunctionObjects
+	case.run_tool('mirrorMesh', '-noFunctionObjects')
+	write_mirror_mesh_dict(case, [0, 1, 0])
+	case.run_tool('mirrorMesh', '-noFunctionObjects')
+	
+	#we prepare the thermophysical and turbulence properties
+	write_thermophysical_properties(case)
+	write_turbulence_properties(case)
+	#we write fvScheme and fvSolution
+	write_fv_schemes(case)
+	write_fv_solution(case)
     
-    write_mirror_mesh_dict(case, [1, 0, 0])
-    #mirror the quarter cylinder, need to run with -noFunctionObjects
-    case.run_tool('mirrorMesh', '-noFunctionObjects')
-    write_mirror_mesh_dict(case, [0, 1, 0])
-    case.run_tool('mirrorMesh', '-noFunctionObjects')
-    
-    #we prepare the thermophysical and turbulence properties
-    write_thermophysical_properties(case)
-    write_turbulence_properties(case)
-    #we write fvScheme and fvSolution
-    write_fv_schemes(case)
-    write_fv_solution(case)
-    
-    write_initial_conditions(case)
-    case.run_tool('rhoCentralFoam')
+	write_initial_conditions(case, initial_speed)
+	case.run_tool('rhoCentralFoam')
 
 def create_new_case(case_dir):
     """Creates new case directory"""
@@ -58,7 +60,7 @@ def create_new_case(case_dir):
     #creates the case
     return Case(case_dir)
 
-def write_control_dict(case, n_iter):
+def write_control_dict(case, n_iter, initial_speed):
     """Sets up the control dictionary.
     In this example we use the rhoCentralFoam compressible solver"""
 
@@ -68,8 +70,8 @@ def write_control_dict(case, n_iter):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 0.1,
-        'deltaT': 0.00005,
+        'endTime': 0.30,
+        'deltaT': 0.00035,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
         'purgeWrite': 0,
@@ -92,9 +94,9 @@ def write_control_dict(case, n_iter):
         		'dragDir':  [1, 0, 0],
         		'liftDir': [0, 1, 0],
         		'pitchAxis': [0, 0, 1],
-        		'magUInf': 300,
-        		'lRef': 1,
-        		'Aref': 1,
+        		'magUInf': initial_speed,
+        		'lRef': 10,
+        		'Aref': 10,
 
         		'rhoName': 'rhoInf',
         		'rhoInf': 1,
@@ -243,7 +245,7 @@ def write_fv_solution(case):
     with case.mutable_data_file(FileName.FV_SOLUTION) as d:
         d.update(fv_solution)
 
-def write_initial_conditions(case):
+def write_initial_conditions(case, initial_speed):
     """Sets the intial conditions"""
     #creates the p initial conditions
     p_file = case.mutable_data_file(
@@ -275,7 +277,7 @@ def write_initial_conditions(case):
     with U_file as U:
         U.update({
             'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
-            'internalField': ('uniform', [300, 0, 0]),
+            'internalField': ('uniform', [initial_speed, 0, 0]),
             'boundaryField': {
                 'cylinder' : {
                     'type' : 'fixedValue',
@@ -283,7 +285,7 @@ def write_initial_conditions(case):
                 },
                 'outerRim' : {
                     'type' : 'inletOutlet',
-                    'inletValue' : ('uniform', [300, 0, 0]),
+                    'inletValue' : ('uniform', [initial_speed, 0, 0]),
                 },
                 'frontAndBack' : {
                     'type' : 'empty'
