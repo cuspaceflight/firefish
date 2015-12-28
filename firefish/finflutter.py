@@ -45,7 +45,7 @@ def model_atmosphere(altitudes):
         altitudes (np.array): 1-d array of geopotential altitudes in metres
 
     Returns:
-        A giving corresponding 1-d arrays of estimated pressure,
+        A triple giving corresponding 1-d arrays of estimated pressure,
         temperature and speed of sound. Units are Pascals, Celsius and m/s
         respectively.
 
