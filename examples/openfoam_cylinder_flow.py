@@ -16,14 +16,24 @@ import os
 from firefish.case import (
     Case, Dimension, FileName, FileClass
 )
+import matplotlib
+matplotlib.use('PDF')
+
 from matplotlib import pyplot as plt
 import numpy as np
 import shutil
 
-def main(case_dir='cylinder', n_iter=10):
+def main(case_dir='cylinder', n_iter=10, output="drag-coefficient-vs-Re.pdf"):
 	#set an initial speed, this can be changed each time the case is run
-	for initial_speed in range(10, 360, 50):
-    #Try to create new case directory
+	data_points = 3
+	log_reynolds = np.linspace(6, 7, num = data_points)
+	drag_coefficients = np.zeros_like(log_reynolds)
+	
+	for x in range(data_points):
+		Re = 10**(log_reynolds[x])
+		initial_speed = Re * 1.8e-05 / 10
+		#print str(initial_speed) + "\n"
+    	#Try to create new case directory
 		case = create_new_case(case_dir)
 		# Add the information needed by blockMesh.
 		write_control_dict(case, n_iter, initial_speed)
@@ -49,11 +59,17 @@ def main(case_dir='cylinder', n_iter=10):
 		forceCoeffs_path = case_dir + '/postProcessing/forceCoefficients/0/forceCoeffs.dat'
 		coeffs = np.loadtxt(forceCoeffs_path, skiprows = 9)
 		Cd_final = coeffs[:,2][-1]
-		#Reynolds number
-		Re = 10*1*initial_speed/(1.8e-05)
-		print str(initial_speed) + "\t" + str(Re) + "\t" + str(Cd_final) + "\n"
+		drag_coefficients[x] = Cd_final
+		print drag_coefficients
+		
 		shutil.rmtree(case_dir)
 
+	plt.figure()
+	plt.plot(log_reynolds, drag_coefficients)
+	plt.title('Drag coefficient of a cylinder vs Reynolds number')
+	plt.xlabel('log Reynolds')
+	plt.ylabel('drag_coefficiet')
+	plt.savefig(output, format='PDF')
 
 def create_new_case(case_dir):
     """Creates new case directory"""
@@ -75,7 +91,7 @@ def write_control_dict(case, n_iter, initial_speed):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 0.15,
+        'endTime': 0.7,
         'deltaT': 0.00035,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
