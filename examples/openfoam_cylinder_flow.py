@@ -1,8 +1,8 @@
 """
-Example which produces flow over a cylinder and uses function objects in order 
+Example which produces flow over a cylinder and uses function objects in order
 to calculate the drag coefficient over it.
 
-The case will test the use of function objects, use of mirrorMesh to generate 
+The case will test the use of function objects, use of mirrorMesh to generate
 symmetrical geometries, and application of the Spalart-Allmaras turbulent model.
 
 >>> import os
@@ -25,10 +25,10 @@ import shutil
 
 def main(case_dir='cylinder', n_iter=10, output="drag-coefficient-vs-Re.pdf"):
 	#set an initial speed, this can be changed each time the case is run
-	data_points = 3
+	data_points = 4
 	log_reynolds = np.linspace(6, 7, num = data_points)
 	drag_coefficients = np.zeros_like(log_reynolds)
-	
+
 	for x in range(data_points):
 		Re = 10**(log_reynolds[x])
 		initial_speed = Re * 1.8e-05 / 10
@@ -40,13 +40,13 @@ def main(case_dir='cylinder', n_iter=10, output="drag-coefficient-vs-Re.pdf"):
 		write_block_mesh_dict(case)
 		#we generate the mesh
 		case.run_tool('blockMesh')
-		
+
 		write_mirror_mesh_dict(case, [1, 0, 0])
 		#mirror the quarter cylinder, need to run with -noFunctionObjects
 		case.run_tool('mirrorMesh', '-noFunctionObjects')
 		write_mirror_mesh_dict(case, [0, 1, 0])
 		case.run_tool('mirrorMesh', '-noFunctionObjects')
-		
+
 		#we prepare the thermophysical and turbulence properties
 		write_thermophysical_properties(case)
 		write_turbulence_properties(case)
@@ -55,13 +55,14 @@ def main(case_dir='cylinder', n_iter=10, output="drag-coefficient-vs-Re.pdf"):
 		write_fv_solution(case)
 		write_initial_conditions(case, initial_speed)
 		case.run_tool('rhoCentralFoam')
-		
+
 		forceCoeffs_path = case_dir + '/postProcessing/forceCoefficients/0/forceCoeffs.dat'
 		coeffs = np.loadtxt(forceCoeffs_path, skiprows = 9)
 		Cd_final = coeffs[:,2][-1]
 		drag_coefficients[x] = Cd_final
-		print drag_coefficients
-		
+		#uncomment to view the drag coefficients as they are calculated
+		#print drag_coefficients
+
 		shutil.rmtree(case_dir)
 
 	plt.figure()
@@ -91,7 +92,7 @@ def write_control_dict(case, n_iter, initial_speed):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 0.7,
+        'endTime': 2.5,
         'deltaT': 0.00035,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
@@ -138,7 +139,7 @@ def write_control_dict(case, n_iter, initial_speed):
 def write_block_mesh_dict(case):
     """Writes the block mesh"""
     block_mesh_dict = {
-  
+
         'convertToMeters': 10,
 
         'vertices': [
@@ -149,7 +150,7 @@ def write_block_mesh_dict(case):
         'blocks': [
             (
                 'hex', [0, 1, 2, 3, 4, 5, 6, 7], [30, 30, 1],
-                'simpleGrading', [8, 1, 1],
+                'simpleGrading', [10, 1, 1],
             )
         ],
 
@@ -168,12 +169,12 @@ def write_block_mesh_dict(case):
                 'type': 'patch',
                 'faces': [[2, 6, 5, 1]],
             }),
-        
+
             ('cylinder', {
                 'type': 'wall',
                 'faces': [[0, 4, 7, 3]],
             }),
-        
+
             ('frontAndBack', {
                 'type': 'empty',
                 'faces': [
@@ -316,7 +317,7 @@ def write_initial_conditions(case, initial_speed):
 
     #create T initial conditions
     T_file = case.mutable_data_file(
-        '0/T', create_class = FileClass.SCALAR_FIELD_3D        
+        '0/T', create_class = FileClass.SCALAR_FIELD_3D
     )
 
     with T_file as T:
@@ -343,15 +344,15 @@ def write_initial_conditions(case, initial_speed):
     with nut_file as nut:
         nut.update({
             'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
-            'internalField' : ('uniform', 0.14),
+            'internalField' : ('uniform', 1.8e-05),
             'boundaryField' : {
                 'cylinder':{
                     'type' : 'zeroGradient',
-                    'value': ('uniform', 0.14)
+                    'value': ('uniform', 1.8e-05)
                 },
                 'outerRim':{
                     'type' : 'freestream',
-                    'freestreamValue' : ('uniform', 0.14)
+                    'freestreamValue' : ('uniform', 1.8e-05)
                 },
                 'frontAndBack':{
                     'type' : 'empty'
@@ -362,11 +363,11 @@ def write_initial_conditions(case, initial_speed):
     nuTilda_file = case.mutable_data_file(
         '0/nuTilda', create_class = FileClass.SCALAR_FIELD_3D
     )
-    
+
     with nuTilda_file as nuTilda:
         nuTilda.update({
             'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
-            'internalField' : ('uniform', 0.14),
+            'internalField' : ('uniform', 0),
             'boundaryField' : {
                 'cylinder':{
                     'type' : 'zeroGradient',
@@ -374,7 +375,7 @@ def write_initial_conditions(case, initial_speed):
                 },
                 'outerRim':{
                     'type' : 'freestream',
-                    'freestreamValue' : ('uniform', 0.14)
+                    'freestreamValue' : ('uniform', 0)
                 },
                 'frontAndBack':{
                     'type' : 'empty'
