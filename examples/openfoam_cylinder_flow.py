@@ -9,7 +9,7 @@ symmetrical geometries, and application of the Spalart-Allmaras turbulent model.
 >>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cylinder')
 >>> main(case_dir,1)
 >>> os.path.isdir(os.path.join(case_dir, '1'))
-True
+False
 """
 
 import os
@@ -92,7 +92,7 @@ def write_control_dict(case, n_iter, initial_speed):
         'startFrom': 'startTime',
         'startTime': 0,
         'stopAt': 'endTime',
-        'endTime': 2.5,
+        'endTime': 0.7,
         'deltaT': 0.00035,
         'writeControl': 'runTime',
         'writeInterval': 0.003,
