@@ -54,6 +54,9 @@ class FileName(enum.Enum):
     #: blockMeshDict
     BLOCK_MESH = _sys_path('blockMeshDict')
 
+    #: mirrorMeshDict
+    MIRROR_MESH = _sys_path('mirrorMeshDict')
+
     #: fvSolution
     FV_SOLUTION = _sys_path('fvSolution')
 
@@ -262,7 +265,7 @@ class Case(object):
         """
         return read_data_file(self._get_rel_path(_to_dict_path(path)))
 
-    def run_tool(self, tool_name):
+    def run_tool(self, tool_name, flags=""):
         """Run an OpenFOAM tool on the case.
 
         It is assumed that the tool accepts the standard "-case" argument.
@@ -283,6 +286,9 @@ class Case(object):
 
         # We assume that the tool can take a -case argument
         args = [tool_name, '-case', self.root_dir_path]
+
+        if flags:
+            args.append(flags)
 
         # Run the command
         try:
