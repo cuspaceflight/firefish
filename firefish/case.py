@@ -71,7 +71,7 @@ class FileName(enum.Enum):
 
     #: turbulence Properties
     TURBULENCE_PROPERTIES = _constant_path('turbulenceProperties')
-    
+
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
@@ -286,7 +286,7 @@ class Case(object):
 
         # We assume that the tool can take a -case argument
         args = [tool_name, '-case', self.root_dir_path]
-        
+
         if flags:
             args.append(flags)
 

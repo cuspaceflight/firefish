@@ -69,7 +69,7 @@ def main(case_dir='cylinder', n_iter=10, output="drag-coefficient-vs-Re.pdf"):
 	plt.plot(log_reynolds, drag_coefficients)
 	plt.title('Drag coefficient of a cylinder vs Reynolds number')
 	plt.xlabel('log Reynolds')
-	plt.ylabel('drag_coefficiet')
+	plt.ylabel('drag_coefficient')
 	plt.savefig(output, format='PDF')
 
 def create_new_case(case_dir):
