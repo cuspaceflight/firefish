@@ -71,7 +71,15 @@ class FileName(enum.Enum):
 
     #: turbulence Properties
     TURBULENCE_PROPERTIES = _constant_path('turbulenceProperties')
+    
+class MeshGenerator(enum.Enum):
+    """An eumeration of different mesh generation methods"""
+    SNAPPY  = 1
+    GMSH    = 2
 
+class GeometryFormat(enum.Enum):
+    """An enumeration of different geometry formats"""
+    STL     = 1
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
@@ -189,6 +197,13 @@ def read_data_file(path):
     """
     return ParsedParameterFile(path).content
 
+class Geometry(object):
+    """Object representing an external geometry from which to create a mesh
+    """
+    def __init__(self,name,geomType):
+        """name is the name of the object, type is the geometry format"""
+        self.name       = name
+        self.geomType   = geomType
 
 class Case(object):
     """Object representing an OpenFOAM case on disk.
