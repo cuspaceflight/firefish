@@ -10,6 +10,91 @@ the `numpy-stl documentation`_ for more information.
 import numpy as np
 import stl.mesh as mesh
 
+class GeometryFormat(enum.Enum):
+    """An enumeration of different geometry formats"""
+    STL     = 1
+
+class MeshQualitySettings(object):
+    def __init__(self):
+        """Fills it with default values"""
+        self.maxNonOrtho            = 65
+        self.maxBoundarySkewness    = 20
+        self.maxInternalSkewness    = 4
+        self.maxConcave             = 80
+        self.minFlatness            = 0.5
+        self.minVol                 = 1e-13
+        self.minArea                = -1
+        self.minTwist               = 0.05;
+        self.minDeterminant         = 0.001;
+        self.minFaceWeight          = 0.05;
+        self.minVolRatio            = 0.01
+        self.minTriangleTwist       = -1
+        self.nSmoothScale           = 4
+        self.errorReduction         = 0.75
+        
+    def write_settings(self,case):
+        quality_settings_dict = {
+            'maxNonOrtho' : self.maxNonOrtho,
+            'maxBoundarySkewness' : self.maxBoundarySkewness,
+            'maxInternalSkewness' : self.maxInternalSkewness,
+            'maxConcave' : self.maxConcave,
+            'minFlatness' : self.minFlatness,
+            'minVol' : self.minVol,
+            'minArea' : self.minArea,
+            'minTwist' : self.minTwist,
+            'minDeterminant' : self.minDeterminant,
+            'minFaceWeight' : self.minFaceWeight,
+            'minVolRatio' : self.minVolRatio,
+            'minTriangleTwist' : self.minTriangleTwist,
+            'nSmoothScale' : self.nSmoothScale,
+            'errorReduction' : self.errorReduction }
+        with case.mutable_data_file(FileName.MESH_QUALITY) as d:
+            d.update(quality_settings_dict)
+            
+        
+class Geometry(object):
+    """Encapsulates a lot of desired geometry functionality"""
+    
+    def __init__(self,geomType,path,name,case):
+        self.geomType   = geomType
+        self.geomPath   = path
+        self.saved      = False;    #Flag to check whether this has been written or not
+        self.case       = case
+        self.name       = name
+        
+        if (geomType == GeometryFormat.STL):
+            self.geom   = load(path)
+            
+        self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
+            
+    def translate(self, delta):
+        """Scales geometry by delta"""
+        if self.geomType == GeometryFormat.STL:
+            self.geom = translate(self.geom,delta)
+    
+    def scale(self, factor):
+        """Scales geometry by factor"""
+        if self.geomType == GeometryFormat.STL:
+            self.geom = scale(self.geom,factor)
+            
+    def extract_features(self):
+        #This is used by mesh generation but could be used elsewhere so is kept in this class
+        if !self.saved:
+            self.case.add_tri_surface(self.name,self.geom)
+            
+        surface_extract_dict = 
+        {
+            '{}.stl'.format(self.name) : { 'extractionMethod' : 'extractFromSurface',
+                                           'extractFromSurfaceCoeffs' : { 'includedAngle' : 180,
+                                                                          'geometricTestOnly' },
+                                           'writeObj' : 'yes'}
+        }
+        
+        with self.case.mutable_data_file(FileName.SURFACE_FEATURE_EXTRACT) as d:
+            d.update(surface_extract_dict)
+            
+        self.case.run_tool('surfaceFeatureExtract')
+    
 def _erase_attr(o, attr):
     """Delete the attribute *attr* from *o* but only if present."""
     if hasattr(o, attr):
