@@ -9,6 +9,10 @@ the `numpy-stl documentation`_ for more information.
 """
 import numpy as np
 import stl.mesh as mesh
+import enum
+
+from firefish.case import (
+    Case, FileName)
 
 class GeometryFormat(enum.Enum):
     """An enumeration of different geometry formats"""
@@ -48,7 +52,7 @@ class MeshQualitySettings(object):
             'minTriangleTwist' : self.minTriangleTwist,
             'nSmoothScale' : self.nSmoothScale,
             'errorReduction' : self.errorReduction }
-        with case.mutable_data_file(FileName.MESH_QUALITY) as d:
+        with case.mutable_data_file(FileName.MESH_QUALITY_SETTINGS) as d:
             d.update(quality_settings_dict)
             
         
@@ -80,14 +84,13 @@ class Geometry(object):
             
     def extract_features(self):
         #This is used by mesh generation but could be used elsewhere so is kept in this class
-        if !self.saved:
+        if self.saved==False:
             self.case.add_tri_surface(self.name,self.geom)
             
-        surface_extract_dict = 
-        {
+        surface_extract_dict = {
             '{}.stl'.format(self.name) : { 'extractionMethod' : 'extractFromSurface',
                                            'extractFromSurfaceCoeffs' : { 'includedAngle' : 180,
-                                                                          'geometricTestOnly' },
+                                                                          'geometricTestOnly' : True },
                                            'writeObj' : 'yes'}
         }
         

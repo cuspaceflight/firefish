@@ -1,10 +1,27 @@
 import os
 
-from firefish.case import Case
+from firefish.case import (
+    Case, FileName)
+from firefish.geometry import (
+    Geometry,GeometryFormat)
+from firefish.meshsnappy import SnappyHexMesh
 
 def main(case_dir='snappy'):
     #Create a new case file, raise an error if the directory already exists
     case = create_new_case(case_dir)
+    write_control_dict(case)
+    #write the base block mesh
+    make_block_mesh(case)
+    ball = Geometry(GeometryFormat.STL,'example.stl','example',case)
+    ball.scale(0.001);
+    ball.translate([0.5,.03,0.3])
+    snap = SnappyHexMesh(ball,4,case)
+    snap.snap=False
+    snap.addLayers=False
+    snap.generate_mesh()
+    #we need to write fvSchems and fvSolution to be able to use paraForm
+    write_fv_schemes(case)
+    write_fv_solution(case)
     
 def create_new_case(case_dir):
     # Check that the specified case directory does not already exist
@@ -15,3 +32,120 @@ def create_new_case(case_dir):
 
     # Create the case
     return Case(case_dir)
+
+def write_control_dict(case):
+    #This is a token control dict needed in order to get everything to run
+    control_dict = {
+        'application': 'icoFoam',
+        'startFrom': 'startTime',
+        'startTime': 0,
+        'stopAt': 'endTime',
+        'endTime': 0.5,
+        'deltaT': 0.005,
+        'writeControl': 'timeStep',
+        'writeInterval': 20,
+        'purgeWrite': 0,
+        'writeFormat': 'ascii',
+        'writePrecision': 6,
+        'writeCompression': 'off',
+        'timeFormat': 'general',
+        'timePrecision': 6,
+        'runTimeModifiable': True,
+    }
+
+    with case.mutable_data_file(FileName.CONTROL) as d:
+        d.update(control_dict)
+        
+def make_block_mesh(case):    
+    block_mesh_dict = {
+
+        'vertices': [
+            [0, 0, 0], [5, 0, 0], [5, 2, 0], [0, 2, 0],
+            [0, 0, 2], [5, 0, 2], [5, 2, 2], [0, 2, 2],
+        ],
+
+        'blocks': [
+            (
+                'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 1],
+                'simpleGrading', [1, 1, 1],
+            )
+        ],
+
+        'edges': [],
+
+        # Note the odd way in which boundary is defined here as a
+        # list of tuples.
+        'boundary': [
+            ('movingWall', {
+                'type': 'wall',
+                'faces': [ [3, 7, 6, 2] ],
+            }),
+            ('fixedWalls', {
+                'type': 'wall',
+                'faces': [
+                    [0, 4, 7, 3],
+                    [2, 6, 5, 1],
+                    [1, 5, 4, 0],
+                ],
+            }),
+            ('frontAndBack', {
+                'type': 'empty',
+                'faces': [
+                    [0, 3, 2, 1],
+                    [4, 5, 6, 7],
+                ],
+            }),
+        ],
+
+        'mergePatchPairs': [],
+    }
+
+    with case.mutable_data_file(FileName.BLOCK_MESH) as d:
+        d.update(block_mesh_dict)
+        
+    case.run_tool('blockMesh')
+    
+def write_fv_solution(case):
+    #Needed so we can view it in ParaFoam
+    fv_solution = {
+        'solvers': {
+            'p': {
+                'solver': 'PCG',
+                'preconditioner': 'DIC',
+                'tolerance': 1e-6,
+                'relTol': 0,
+            },
+            'U': {
+                'solver': 'smoothSolver',
+                'smoother': 'symGaussSeidel',
+                'tolerance': 1e-5,
+                'relTol': 0,
+            },
+        },
+        'PISO': {
+            'nCorrectors': 2,
+            'nNonOrthogonalCorrectors': 0,
+            'pRefCell': 0,
+            'pRefValue': 0,
+        }
+    }
+
+    with case.mutable_data_file(FileName.FV_SOLUTION) as d:
+        d.update(fv_solution)
+
+def write_fv_schemes(case):
+    #needed so we can view it in paraFoam
+    fv_schemes = {
+        'ddtSchemes': { 'default': 'Euler' },
+        'gradSchemes': { 'default': 'Gauss linear', 'grad(p)': 'Gauss linear' },
+        'divSchemes': { 'div(phi,U)': 'Gauss linear', 'default': 'none' },
+        'laplacianSchemes': { 'default': 'Gauss linear orthogonal' },
+        'interpolationSchemes': { 'default': 'linear' },
+        'snGradSchemes': { 'default': 'orthogonal' },
+    }
+
+    with case.mutable_data_file(FileName.FV_SCHEMES) as d:
+        d.update(fv_schemes)
+
+if __name__ == '__main__':
+    main()

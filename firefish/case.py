@@ -64,7 +64,7 @@ class FileName(enum.Enum):
     FV_SCHEMES = _sys_path('fvSchemes')
     
     #: qualitySettings
-    QUALITY_SETTINGS = _sys_path('meshQualityDict')
+    MESH_QUALITY_SETTINGS = _sys_path('meshQualityDict')
     
     #: surface feature extract
     SURFACE_FEATURE_EXTRACT = _sys_path('surfaceFeatureExtractDict')
@@ -201,14 +201,6 @@ def read_data_file(path):
         IOError: the path could not be read from
     """
     return ParsedParameterFile(path).content
-
-class Geometry(object):
-    """Object representing an external geometry from which to create a mesh
-    """
-    def __init__(self,name,geomType):
-        """name is the name of the object, type is the geometry format"""
-        self.name       = name
-        self.geomType   = geomType
 
 class Case(object):
     """Object representing an OpenFOAM case on disk.

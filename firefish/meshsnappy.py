@@ -1,11 +1,11 @@
 import os
 
 from firefish.case import (
-    Case, Dimension, FileName, FileClass, Geometry, GeometryFormat
+    Case, Dimension, FileName, FileClass
 )
 
 from firefish.geometry import(
-    Geometry
+    Geometry, GeometryFormat
 )
 
 """This module provides tools for building and running SnappyHexMesh
@@ -26,12 +26,14 @@ class SnappyHexMesh(object):
         self.snap                   = True
         self.addLayers              = True
         self.maxLocalCells          = 1000000
-        self.maxGlobalCells         = 2000000
+        self.maxGlobalCells         = 200000
+        self.minRefinementCells     = 200
         self.maxLoadUnbalance       = 0.1;
         self.nCellsBetweenLevels    = 3;
         self.edgeRefinementLevel    = 6;
         self.refinementSurfaceMin   = 5;
         self.refinementSurfaceMax   = 6;
+        self.resolveFeatureAngles   = 30;
         self.distanceRefinements    = [0.1, 0.2]
         self.distanceLevels         = [4, 3]
         self.locationToKeep         = [0.001, 0.001, 0.0015]
@@ -54,6 +56,7 @@ class SnappyHexMesh(object):
         self.slipFeatureAngle       = 30;
         self.nRelaxIter             = 3;
         self.nSmoothSurfaceNormals  = 1;
+        self.nSmoothNormals         = 1
         self.nSmoothThickness       = 10;
         self.maxFaceThicknessratio  = 0.5;
         self.maxThicknessToMedialRatio  = 0.3;
@@ -67,7 +70,7 @@ class SnappyHexMesh(object):
         snappy_dict = {
             'casetellatedMesh' : self.castellate,
             'snap' : self.snap,
-            'addLayers' : self.addLayers
+            'addLayers' : self.addLayers,
             'geometry' : {
                 self.geom.filename : {
                     'type' : 'triSurfaceMesh',
@@ -81,8 +84,8 @@ class SnappyHexMesh(object):
                 'nCellsbetweenLevels' : self.nCellsBetweenLevels,
                 'features' : ( { 'file' : '{}.eMesh'.format(self.geom.name) } ),
                 'refinementSurfaces' : { self.geom.filename : {
-                        'level' : (self.refinementSurfaceMin : self.refinementSurfaceMax ) } },
-                'resolveFeatureAngles' : self.resolveFeatureAgnles,
+                        'level' : [self.refinementSurfaceMin , self.refinementSurfaceMax ] } },
+                'resolveFeatureAngles' : self.resolveFeatureAngles,
                 'refinementRegions' : { self.geom.filename : { 'mode' : 'distance',
                                                                'levels' : ([(self.distanceRefinements[x],self.distanceLevels[x]) for x in range(len(self.distanceRefinements))]) } },
                 'locationInMesh' : self.locationToKeep,
@@ -90,14 +93,14 @@ class SnappyHexMesh(object):
                 },
             'snapControls' :
             {
-                'nSmoothPatch' : self.nSmoothPatch.
+                'nSmoothPatch' : self.nSmoothPatch,
                 'snapTolerance' : self.snapTolerance,
                 'nRelaxIter' : self.nRelaxIter,
                 'nFeatureSnapIter' : self.nFeatureSnapIter,
                 'implicitFeatureSnap' : self.implicitFeatureSnap,
                 'explicitFeatureSnap' : self.explicitFeatureSnap,
-                'multiRegionFeatureSnap' self.multiRegionFeatureSnap,
-                }
+                'multiRegionFeatureSnap' : self.multiRegionFeatureSnap,
+                },
             'addLayersControls' :
             {
                 'relativeSizes' : self.relativeSizes,
@@ -112,15 +115,15 @@ class SnappyHexMesh(object):
                 'nSmoothSurfaceNormals' : self.nSmoothSurfaceNormals,
                 'nSmoothNormals' : self.nSmoothNormals,
                 'nSmoothThickness' : self.nSmoothThickness,
-                'maxFaceThicknessRatio' : self.maxfaceThicknessratio,
-                'minThicknessToMedialRatio' : self.minThicknessToMedialRatio,
+                'maxFaceThicknessRatio' : self.maxFaceThicknessratio,
+                'maxThicknessToMedialRatio' : self.maxThicknessToMedialRatio,
                 'minMedianAxisAngle' : self.minMedianAxisAngle,
-                'nBufferCellsNoExture' : self.nBufferCellsNoExtrude,
+                'nBufferCellsNoExtrude' : self.nBufferCellsNoExtrude,
                 'nLayerIter' : self.nLayerIter
-                }
+                },
             'meshQualityControls' :
             {
-                '#include "meshQualityDict"'
+                '#include' : '"meshQualityDict"'
                 }
             }
         with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
@@ -129,8 +132,8 @@ class SnappyHexMesh(object):
     def generate_mesh(self):
         #We assume an underlying block mesh has been set
         self.geom.extract_features()
-        self.geom.meshSettings.write_settings(case)
+        self.geom.meshSettings.write_settings(self.case)
         self.write_snappy_dict()
-        self.case.run_tool('snappyHexMesh')
+        # self.case.run_tool('snappyHexMesh')
     
 
