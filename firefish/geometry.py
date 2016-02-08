@@ -61,6 +61,7 @@ class Geometry(object):
         self.saved      = False;    #Flag to check whether this has been written or not
         self.case       = case
         self.name       = name
+        self.filename   = '{}.stl'.format(self.name);
         
         if (geomType == GeometryFormat.STL):
             self.geom   = load(path)
