@@ -43,8 +43,8 @@ class SnappyHexMesh(object):
         self.nSolveIter             = 30;
         self.nRelaxIter             = 5;
         self.nFeatureSnapIter       = 10;
-        self.implicitFeatureSnap    = False;
-        self.explicitFeatureSnap    = True;
+        self.implicitFeatureSnap    = True;
+        self.explicitFeatureSnap    = False;
         self.multiRegionFeatureSnap = False;
         self.relativeSizes          = True;
         self.nSurfaceLayers         = 1;
@@ -81,7 +81,7 @@ class SnappyHexMesh(object):
                 'minRefinementCells' : self.minRefinementCells,
                 'maxLoadUnbalance' : self.maxLoadUnbalance,
                 'nCellsBetweenLevels' : self.nCellsBetweenLevels,
-                'features' : [ {  'file' : '"{}.eMesh"'.format(self.geom.name), 'level' : self.surfaceRefinement}],#'file %s.eMesh;\n level %d;'%(self.geom.name,self.surfaceRefinement) }],
+                'features' : [ {  'file' : '"{}.eMesh"'.format(self.geom.name), 'level' : self.surfaceRefinement}],
                 'refinementSurfaces' : { self.geom.filename : {
                         'level' : [self.refinementSurfaceMin , self.refinementSurfaceMax ] } },
                 'resolveFeatureAngle' : self.resolveFeatureAngle,
@@ -135,6 +135,6 @@ class SnappyHexMesh(object):
         self.geom.extract_features()
         self.geom.meshSettings.write_settings(self.case)
         self.write_snappy_dict()
-        # self.case.run_tool('snappyHexMesh')
+        self.case.run_tool('snappyHexMesh')
     
 

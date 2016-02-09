@@ -13,16 +13,17 @@ def main(case_dir='snappy'):
     #write the base block mesh
     make_block_mesh(case)
     ball = Geometry(GeometryFormat.STL,'example.stl','example',case)
-    ball.scale(0.001);
-    ball.translate([0.5,.03,0.3])
+    ball.scale(0.01);
+    ball.translate([0.5,.3,0.3])
     snap = SnappyHexMesh(ball,4,case)
-    snap.snap=False
+    snap.snap=True
+    snap.snapTolerance = 8;
+    snap.locationToKeep = [4.8,0.123,0.14] #odd numbers to ensure not on face
     snap.addLayers=False
-    snap.generate_mesh()
-    #we need to write fvSchems and fvSolution to be able to use paraForm
+    #we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
     write_fv_schemes(case)
     write_fv_solution(case)
-    case.run_tool('snappyHexMesh')
+    snap.generate_mesh()
     
 def create_new_case(case_dir):
     # Check that the specified case directory does not already exist
