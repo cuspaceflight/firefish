@@ -33,7 +33,7 @@ class SnappyHexMesh(object):
         self.edgeRefinementLevel    = 6;
         self.refinementSurfaceMin   = 5;
         self.refinementSurfaceMax   = 6;
-        self.resolveFeatureAngles   = 30;
+        self.resolveFeatureAngle    = 30;
         self.distanceRefinements    = [0.1, 0.2]
         self.distanceLevels         = [4, 3]
         self.locationToKeep         = [0.001, 0.001, 0.0015]
@@ -63,39 +63,39 @@ class SnappyHexMesh(object):
         self.minMedianAxisAngle     = 90;
         self.nBufferCellsNoExtrude  = 0;
         self.nLayerIter             = 50;
-        
+        self.mergeTolerance         = 1e-6
         
         
     def write_snappy_dict(self):
         snappy_dict = {
-            'casetellatedMesh' : self.castellate,
+            'castellatedMesh' : self.castellate,
             'snap' : self.snap,
             'addLayers' : self.addLayers,
             'geometry' : {
                 self.geom.filename : {
-                    'type' : 'triSurfaceMesh',
-                    'name' : self.geom.name },
+                    'type' : 'triSurfaceMesh'},
                 },
             'castellatedMeshControls' : {
                 'maxLocalCells' : self.maxLocalCells,
                 'maxGlobalCells' : self.maxGlobalCells,
                 'minRefinementCells' : self.minRefinementCells,
                 'maxLoadUnbalance' : self.maxLoadUnbalance,
-                'nCellsbetweenLevels' : self.nCellsBetweenLevels,
-                'features' : ( { 'file' : '{}.eMesh'.format(self.geom.name) } ),
+                'nCellsBetweenLevels' : self.nCellsBetweenLevels,
+                'features' : [ {  'file' : '"{}.eMesh"'.format(self.geom.name), 'level' : self.surfaceRefinement}],#'file %s.eMesh;\n level %d;'%(self.geom.name,self.surfaceRefinement) }],
                 'refinementSurfaces' : { self.geom.filename : {
                         'level' : [self.refinementSurfaceMin , self.refinementSurfaceMax ] } },
-                'resolveFeatureAngles' : self.resolveFeatureAngles,
+                'resolveFeatureAngle' : self.resolveFeatureAngle,
                 'refinementRegions' : { self.geom.filename : { 'mode' : 'distance',
-                                                               'levels' : ([(self.distanceRefinements[x],self.distanceLevels[x]) for x in range(len(self.distanceRefinements))]) } },
+                                                               'levels' : ([[(self.distanceRefinements[x],self.distanceLevels[x])] for x in range(len(self.distanceRefinements))]) } },
                 'locationInMesh' : self.locationToKeep,
                 'allowFreeStandingZoneFaces' : self.allowFreeStandingFaces
                 },
             'snapControls' :
             {
                 'nSmoothPatch' : self.nSmoothPatch,
-                'snapTolerance' : self.snapTolerance,
+                'tolerance' : self.snapTolerance,
                 'nRelaxIter' : self.nRelaxIter,
+                'nSolveIter' : self.nSolveIter,
                 'nFeatureSnapIter' : self.nFeatureSnapIter,
                 'implicitFeatureSnap' : self.implicitFeatureSnap,
                 'explicitFeatureSnap' : self.explicitFeatureSnap,
@@ -124,7 +124,8 @@ class SnappyHexMesh(object):
             'meshQualityControls' :
             {
                 '#include' : '"meshQualityDict"'
-                }
+                },
+            'mergeTolerance' : self.mergeTolerance
             }
         with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
             d.update(snappy_dict)

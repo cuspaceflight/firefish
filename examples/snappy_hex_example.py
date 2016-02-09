@@ -22,6 +22,7 @@ def main(case_dir='snappy'):
     #we need to write fvSchems and fvSolution to be able to use paraForm
     write_fv_schemes(case)
     write_fv_solution(case)
+    case.run_tool('snappyHexMesh')
     
 def create_new_case(case_dir):
     # Check that the specified case directory does not already exist
@@ -66,7 +67,7 @@ def make_block_mesh(case):
 
         'blocks': [
             (
-                'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 1],
+                'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 20],
                 'simpleGrading', [1, 1, 1],
             )
         ],

@@ -35,6 +35,7 @@ class MeshQualitySettings(object):
         self.minTriangleTwist       = -1
         self.nSmoothScale           = 4
         self.errorReduction         = 0.75
+        self.minTetQuality          = 1e-9
         
     def write_settings(self,case):
         quality_settings_dict = {
@@ -51,7 +52,8 @@ class MeshQualitySettings(object):
             'minVolRatio' : self.minVolRatio,
             'minTriangleTwist' : self.minTriangleTwist,
             'nSmoothScale' : self.nSmoothScale,
-            'errorReduction' : self.errorReduction }
+            'errorReduction' : self.errorReduction,
+            'minTetQuality' : self.minTetQuality}
         with case.mutable_data_file(FileName.MESH_QUALITY_SETTINGS) as d:
             d.update(quality_settings_dict)
             
