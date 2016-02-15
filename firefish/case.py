@@ -62,15 +62,15 @@ class FileName(enum.Enum):
 
     #: fvSchemes
     FV_SCHEMES = _sys_path('fvSchemes')
-    
+
     #: qualitySettings
     MESH_QUALITY_SETTINGS = _sys_path('meshQualityDict')
-    
+
     #: surface feature extract
     SURFACE_FEATURE_EXTRACT = _sys_path('surfaceFeatureExtractDict')
-    
+
     #: snappyHexMesh
-    SNAPPY_HEX_MESH         = _sys_path('snappyHexMeshDict')
+    SNAPPY_HEX_MESH = _sys_path('snappyHexMeshDict')
 
     #: transportProperties
     TRANSPORT_PROPERTIES = _constant_path('transportProperties')
@@ -80,11 +80,11 @@ class FileName(enum.Enum):
 
     #: turbulence Properties
     TURBULENCE_PROPERTIES = _constant_path('turbulenceProperties')
-    
+
 class MeshGenerator(enum.Enum):
     """An eumeration of different mesh generation methods"""
-    SNAPPY  = 1
-    GMSH    = 2
+    SNAPPY = 1
+    GMSH = 2
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.

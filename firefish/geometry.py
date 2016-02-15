@@ -1,7 +1,7 @@
 """
 This module deals with the loading, saving and manipulation of geometry.
 
-Most manipulation functions deal with instances of :py:class:`stl.mesh.Mesh`. 
+Most manipulation functions deal with instances of :py:class:`stl.mesh.Mesh`.
 See the `numpy-stl documentation`_ for more information.
 
 .. _numpy-stl documentation: http://numpy-stl.readthedocs.org/en/latest/stl.html#module-stl.mesh
@@ -67,7 +67,7 @@ class Geometry(object):
         """Initialises settings and loads the geometry into memory
 
         Args:
-            geomType (firefish.geometry.GeometryFormat): indicates what type of geometry this is e.g. STL, OBJ
+            geomType (firefish.geometry.GeometryFormat): indicates what type of geometry this is
             path: path to te geometry file
             name: The name of the geometry (NOT the filename)
             case (firefish.case.Case): The case to place the geometry in
@@ -81,7 +81,7 @@ class Geometry(object):
         if geomType == GeometryFormat.STL:
             self.filename = '{}.stl'.format(self.name)
             self.geom = stl_load(path)
-            
+
 
         self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
 
@@ -101,18 +101,18 @@ class Geometry(object):
                 factor: The factor to scale the gometry by
         """
         if self.geomType == GeometryFormat.STL:
-            self.geom = stl_scale(self.geom,factor)
+            self.geom = stl_scale(self.geom, factor)
 
     def extract_features(self):
         """Extracts surface features from geometry using the surfaceFeatureExtract tool"""
         #This is used by mesh generation but could be used elsewhere so is kept in this class
-        if self.saved==False:
-            self.case.add_tri_surface(self.name,self.geom)
+        if not self.saved:
+            self.case.add_tri_surface(self.name, self.geom)
 
         surface_extract_dict = {
-            '{}.stl'.format(self.name) : { 'extractionMethod' : 'extractFromSurface',
-                                           'extractFromSurfaceCoeffs' : { 'includedAngle' : 180,
-                                                                          'geometricTestOnly' : True },
+            '{}.stl'.format(self.name) : {'extractionMethod' : 'extractFromSurface',
+                                           'extractFromSurfaceCoeffs' : {'includedAngle' : 180,
+                                                                          'geometricTestOnly' : True},
                                            'writeObj' : 'yes'}
         }
 

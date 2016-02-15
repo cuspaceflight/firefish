@@ -83,14 +83,16 @@ class SnappyHexMesh(object):
                 'minRefinementCells' : self.minRefinementCells,
                 'maxLoadUnbalance' : self.maxLoadUnbalance,
                 'nCellsBetweenLevels' : self.nCellsBetweenLevels,
-                'features' : [{'file' : '"{}.eMesh"'.format(self.geom.name), 
-                               'level' : self.surfaceRefinement}],
+                'features' : [{'file' : '"{}.eMesh"'.format(self.geom.name),
+                           'level' : self.surfaceRefinement}],
                 'refinementSurfaces' : {self.geom.filename : {
                         'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}},
                 'resolveFeatureAngle' : self.resolveFeatureAngle,
                 'refinementRegions' : {self.geom.filename :
                                        {'mode' : 'distance',
-                                        'levels' :([[(self.distanceRefinements[x], self.distanceLevels[x])] for x in range(len(self.distanceRefinements))])}},
+                                        'levels' :([[(self.distanceRefinements[x],\
+                                                      self.distanceLevels[x])] for x in\
+                                                    range(len(self.distanceRefinements))])}},
                 'locationInMesh' : self.locationToKeep,
                 'allowFreeStandingZoneFaces' : self.allowFreeStandingFaces
                 },
