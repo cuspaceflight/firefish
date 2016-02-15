@@ -16,7 +16,7 @@ class SnappyHexMesh(object):
             surfaceRefinement: level of refinement at the surface
             case (firefish.case.Case): the case to run SHM from
         """
-        
+
         self.geom = geom
         self.surfaceRefinement = surfaceRefinement
         self.case = case
