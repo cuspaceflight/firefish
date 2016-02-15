@@ -6,7 +6,7 @@ from firefish.case import FileName
 
 class SnappyHexMesh(object):
     """Encapsulates all the snappyHexMesh settings"""
-
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, geom, surfaceRefinement, case):
         """Creates a Snappy Hex Mesh object with default settings and given
         refinement at surface
@@ -16,7 +16,7 @@ class SnappyHexMesh(object):
             surfaceRefinement: level of refinement at the surface
             case (firefish.case.Case): the case to run SHM from
         """
-        # pylint: disable=too-many-instance-attributes
+        
         self.geom = geom
         self.surfaceRefinement = surfaceRefinement
         self.case = case

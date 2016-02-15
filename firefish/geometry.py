@@ -11,8 +11,7 @@ import numpy as np
 import stl.mesh as mesh
 import enum
 
-from firefish.case import (
-    Case, FileName)
+from firefish.case import FileName
 
 class GeometryFormat(enum.Enum):
     """An enumeration of different geometry formats"""
