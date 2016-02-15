@@ -25,7 +25,7 @@ def tmpcase(tmpdir):
 def unit_sphere_geometry(geomdir):
     """An stl.mesh.Mesh representing the unit sphere."""
     stl_path = os.path.join(geomdir, 'unit_sphere.stl')
-    return firefish.geometry.load(stl_path)
+    return firefish.geometry.stl_load(stl_path)
 
 def _read_foam_dict(path):
     """Read foam dict file at path and return content."""
