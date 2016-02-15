@@ -16,6 +16,7 @@ class SnappyHexMesh(object):
             surfaceRefinement: level of refinement at the surface
             case (firefish.case.Case): the case to run SHM from
         """
+        # pylint: disable=too-many-instance-attributes
         self.geom = geom
         self.surfaceRefinement = surfaceRefinement
         self.case = case
@@ -84,9 +85,9 @@ class SnappyHexMesh(object):
                 'maxLoadUnbalance' : self.maxLoadUnbalance,
                 'nCellsBetweenLevels' : self.nCellsBetweenLevels,
                 'features' : [{'file' : '"{}.eMesh"'.format(self.geom.name),
-                           'level' : self.surfaceRefinement}],
+                               'level' : self.surfaceRefinement}],
                 'refinementSurfaces' : {self.geom.filename : {
-                        'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}},
+                    'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}},
                 'resolveFeatureAngle' : self.resolveFeatureAngle,
                 'refinementRegions' : {self.geom.filename :
                                        {'mode' : 'distance',
@@ -141,7 +142,8 @@ class SnappyHexMesh(object):
 
         .. note::
 
-            This extracts surface features, writes the main SHM dict, a mesh quality dict and then runs SHM
+            This extracts surface features, writes the main SHM dict, a mesh quality dict and then
+            runs SHM.
             We assume that an underlying block mesh has already been produced
         """
         self.geom.extract_features()
