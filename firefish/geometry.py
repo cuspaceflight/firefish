@@ -21,7 +21,7 @@ class GeometryFormat(enum.Enum):
 class MeshQualitySettings(object):
     """Controls the mesh quality settings associated with the gometry"""
     def __init__(self):
-        """Fills it with default values"""
+        """Initiates itself with a set of default mesh quality settings"""
         self.maxNonOrtho = 65
         self.maxBoundarySkewness = 20
         self.maxInternalSkewness = 4
@@ -61,34 +61,50 @@ class MeshQualitySettings(object):
 
 
 class Geometry(object):
-    """Encapsulates a lot of desired geometry functionality"""
+    """This class encapsulates the geometry functionality"""
 
     def __init__(self, geomType, path, name, case):
-        """Initialises settings and loads the geometry into memory"""
+        """Initialises settings and loads the geometry into memory
+
+        Args:
+            geomType (firefish.geometry.GeometryFormat): indicates what type of geometry this is e.g. STL, OBJ
+            path: path to te geometry file
+            name: The name of the geometry (NOT the filename)
+            case (firefish.case.Case): The case to place the geometry in
+        """
         self.geomType = geomType
         self.geomPath = path
         self.saved = False    #Flag to check whether this has been written or not
         self.case = case
         self.name = name
-        self.filename = '{}.stl'.format(self.name)
 
         if geomType == GeometryFormat.STL:
-            self.geom = load(path)
+            self.filename = '{}.stl'.format(self.name)
+            self.geom = stl_load(path)
+            
 
         self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
 
     def translate(self, delta):
-        """Scales geometry by delta"""
+        """Translates geometry by delta
+
+            Args:
+                delta: The vector to translate the geometry by
+        """
         if self.geomType == GeometryFormat.STL:
-            self.geom = translate(self.geom, delta)
+            self.geom = stl_translate(self.geom, delta)
 
     def scale(self, factor):
-        """Scales geometry by factor"""
+        """Scales geometry by factor
+
+            Args:
+                factor: The factor to scale the gometry by
+        """
         if self.geomType == GeometryFormat.STL:
-            self.geom = scale(self.geom,factor)
+            self.geom = stl_scale(self.geom,factor)
 
     def extract_features(self):
-        """Extracts features from geometry using the surfaceFeatureExtract tool"""
+        """Extracts surface features from geometry using the surfaceFeatureExtract tool"""
         #This is used by mesh generation but could be used elsewhere so is kept in this class
         if self.saved==False:
             self.case.add_tri_surface(self.name,self.geom)
@@ -110,7 +126,7 @@ def _erase_attr(o, attr):
     if hasattr(o, attr):
         delattr(o, attr)
 
-def load(path):
+def stl_load(path):
     """Convenience function to load a :py:class:`stl.mesh.Mesh` from disk.
 
     .. note::
@@ -126,7 +142,7 @@ def load(path):
     """
     return mesh.Mesh.from_file(path)
 
-def bounds(geom):
+def stl_bounds(geom):
     """Compute the bounding box of the geometry.
 
     Args:
@@ -139,7 +155,7 @@ def bounds(geom):
     """
     return geom.min_, geom.max_
 
-def geometric_centre(geom):
+def stl_geometric_centre(geom):
     """Compute the centre of the bounding box.
 
     Args:
@@ -151,7 +167,7 @@ def geometric_centre(geom):
     """
     return 0.5 * (geom.max_ + geom.min_)
 
-def copy(geom):
+def stl_copy(geom):
     """Copy a geometry.
 
     Use this function sparingly. Geometry can be quite heavyweight as data
@@ -166,7 +182,7 @@ def copy(geom):
     """
     return mesh.Mesh(geom.data, calculate_normals=False, name=geom.name)
 
-def translate(geom, delta):
+def stl_translate(geom, delta):
     """Translate a geometry along some vector.
 
     This function modifies the passed geometry.
@@ -191,7 +207,7 @@ def translate(geom, delta):
 
     return geom
 
-def recentre(geom):
+def stl_recentre(geom):
     """Centre a geometry such that its bounding box is centred on the origin.
 
     This function modifies the passed geometry.
@@ -207,9 +223,9 @@ def recentre(geom):
         The passed geometry to allow for easy chaining of calls.
 
     """
-    return translate(geom, -geometric_centre(geom))
+    return stl_translate(geom, -geometric_centre(geom))
 
-def scale(geom, factor):
+def stl_scale(geom, factor):
     """Scale geometry by a fixed factor.
 
     This function modifies the passed geometry. If the scale factor is a single

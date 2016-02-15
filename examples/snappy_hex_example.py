@@ -1,3 +1,6 @@
+"""
+Example which demonstrates the use of SnappyHexMesh
+"""
 import os
 
 from firefish.case import (
@@ -12,10 +15,12 @@ def main(case_dir='snappy'):
     write_control_dict(case)
     #write the base block mesh
     make_block_mesh(case)
-    ball = Geometry(GeometryFormat.STL,'example.stl','example',case)
-    ball.scale(0.001);
-    ball.translate([0.5,.3,0.3])
-    snap = SnappyHexMesh(ball,4,case)
+
+    rocket = Geometry(GeometryFormat.STL,'example.stl','example',case)
+    rocket.scale(0.5);
+    rocket.translate([0.5,2,2])
+    
+    snap = SnappyHexMesh(rocket,4,case)
     snap.snap=True
     snap.snapTolerance = 8;
     snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
@@ -26,6 +31,7 @@ def main(case_dir='snappy'):
     snap.generate_mesh()
     
 def create_new_case(case_dir):
+    """Creates new case directory"""
     # Check that the specified case directory does not already exist
     if os.path.exists(case_dir):
         raise RuntimeError(
@@ -36,6 +42,7 @@ def create_new_case(case_dir):
     return Case(case_dir)
 
 def write_control_dict(case):
+    """Sets up a token control dictionary"""
     #This is a token control dict needed in order to get everything to run
     control_dict = {
         'application': 'icoFoam',
@@ -58,12 +65,13 @@ def write_control_dict(case):
     with case.mutable_data_file(FileName.CONTROL) as d:
         d.update(control_dict)
         
-def make_block_mesh(case):    
+def make_block_mesh(case):
+    """Creates a block mesh to bound the geometry"""
     block_mesh_dict = {
 
         'vertices': [
-            [0, 0, 0], [5, 0, 0], [5, 2, 0], [0, 2, 0],
-            [0, 0, 2], [5, 0, 2], [5, 2, 2], [0, 2, 2],
+            [0, 0, 0], [6, 0, 0], [6, 3, 0], [0, 3, 0],
+            [0, 0, 3], [6, 0, 3], [6, 3, 3], [0, 3, 3],
         ],
 
         'blocks': [
@@ -108,7 +116,7 @@ def make_block_mesh(case):
     case.run_tool('blockMesh')
     
 def write_fv_solution(case):
-    #Needed so we can view it in ParaFoam
+    """Creates a default fvSolution dictionary so SHM can run"""
     fv_solution = {
         'solvers': {
             'p': {
@@ -136,6 +144,7 @@ def write_fv_solution(case):
         d.update(fv_solution)
 
 def write_fv_schemes(case):
+    """Creates a default fvSchemes dictionary so SHM can run"""
     #needed so we can view it in paraFoam
     fv_schemes = {
         'ddtSchemes': { 'default': 'Euler' },
