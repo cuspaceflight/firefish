@@ -87,7 +87,7 @@ def test_mesh_quality_settings(tmpcase, tmpdir):
     meshQuality = geom.MeshQualitySettings()
     meshQuality.write_settings(tmpcase)
     assert os.path.isfile(os.path.join(
-        tmpcase.root_dir_path, 'system', 'meshQualityDict '
+        tmpcase.root_dir_path, 'system', 'meshQualityDict'
     ))
 
 def test_surface_extract(tmpcase,geomdir):
@@ -117,7 +117,7 @@ def test_surface_extract(tmpcase,geomdir):
     geometry = geom.Geometry(geom.GeometryFormat.STL,stl_path,'sphere',tmpcase)
     geometry.extract_features()
     assert os.path.isfile(os.path.join(
-        tmpcase.root_dir_path, 'system', 'surfaceFeatureExtract'
+        tmpcase.root_dir_path, 'system', 'surfaceFeatureExtractDict'
     ))
     assert os.path.isfile(os.path.join(
         tmpcase.root_dir_path, 'constant', 'triSurface','sphere.eMesh'
