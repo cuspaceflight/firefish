@@ -223,7 +223,7 @@ def stl_recentre(geom):
         The passed geometry to allow for easy chaining of calls.
 
     """
-    return stl_translate(geom, -geometric_centre(geom))
+    return stl_translate(geom, -stl_geometric_centre(geom))
 
 def stl_scale(geom, factor):
     """Scale geometry by a fixed factor.

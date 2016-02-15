@@ -13,7 +13,7 @@ TOLERANCE=2e-2
 def unit_sphere(geomdir):
     """An stl.mesh.Mesh representing the unit sphere."""
     stl_path = os.path.join(geomdir, 'unit_sphere.stl')
-    return geom.load(stl_path)
+    return geom.stl_load(stl_path)
 
 @pytest.fixture
 def off_centre_unit_sphere(geomdir, tmpdir):
