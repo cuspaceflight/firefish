@@ -16,6 +16,15 @@ def unit_sphere(geomdir):
     return geom.stl_load(stl_path)
 
 @pytest.fixture
+def tmpcase(tmpdir):
+    """An empty Case instance which has been created in a temporary directory.
+
+    """
+    from firefish.case import Case
+    case_dir = tmpdir.join('temp_case')
+    return Case(case_dir.strpath)
+
+@pytest.fixture
 def off_centre_unit_sphere(geomdir, tmpdir):
     """An stl.mesh.Mesh representing the unit sphere off centre."""
     stl_path = os.path.join(geomdir, 'unit_sphere.stl')
@@ -73,3 +82,43 @@ def test_non_uniform_scale(unit_sphere):
     min_, max_ = geom.stl_bounds(unit_sphere)
     assert np.all(np.abs(min_ - np.array([-0.5, -2, -3])) < 3*TOLERANCE)
     assert np.all(np.abs(max_ - np.array([0.5, 2, 3])) < 3*TOLERANCE)
+
+def test_mesh_quality_settings(tmpcase, tmpdir):
+    meshQuality = geom.MeshQualitySettings()
+    meshQuality.write_settings(tmpcase)
+    assert os.path.isfile(os.path.join(
+        tmpcase.root_dir_path, 'system', 'meshQualityDict '
+    ))
+
+def test_surface_extract(tmpcase,geomdir):
+    stl_path = os.path.join(geomdir, 'unit_sphere.stl')
+    #This is a token control dict needed in order to get everything to run
+    control_dict = {
+        'application': 'icoFoam',
+        'startFrom': 'startTime',
+        'startTime': 0,
+        'stopAt': 'endTime',
+        'endTime': 0.5,
+        'deltaT': 0.005,
+        'writeControl': 'timeStep',
+        'writeInterval': 20,
+        'purgeWrite': 0,
+        'writeFormat': 'ascii',
+        'writePrecision': 6,
+        'writeCompression': 'off',
+        'timeFormat': 'general',
+        'timePrecision': 6,
+        'runTimeModifiable': True,
+    }
+    from firefish.case import FileName
+
+    with tmpcase.mutable_data_file(FileName.CONTROL) as d:
+        d.update(control_dict)
+    geometry = geom.Geometry(geom.GeometryFormat.STL,stl_path,'sphere',tmpcase)
+    geometry.extract_features()
+    assert os.path.isfile(os.path.join(
+        tmpcase.root_dir_path, 'system', 'surfaceFeatureExtract'
+    ))
+    assert os.path.isfile(os.path.join(
+        tmpcase.root_dir_path, 'constant', 'triSurface','sphere.eMesh'
+    ))
