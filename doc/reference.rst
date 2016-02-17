@@ -18,6 +18,11 @@ Geometry manipulation
 
 .. automodule:: firefish.geometry
    :members:
+   
+Mesh generation
+---------------------
+.. automodule:: firefish.meshsnappy
+   :members:
 
 Fin-flutter
 -----------
