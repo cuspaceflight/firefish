@@ -129,6 +129,10 @@ class Geometry(object):
 				file_list: list of file names, containing the parts which are to be included in
 							the surfaceFeatureExtract
 		"""
+		if not self.saved:
+			for name in file_list:
+				self.case.add_tri_surface(name, self.geom)
+		
 		surface_extract_dict = {}
 		for name in file_list:
 			file_dict = {

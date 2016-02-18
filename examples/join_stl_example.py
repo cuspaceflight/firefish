@@ -17,8 +17,6 @@ def main(case_dir='snappy'):
 	make_block_mesh(case)
 
 	rocket = Geometry(GeometryFormat.STL,'example.stl','example',case)
-	rocket.add_features({'nosecone', 'tube'})
-	"""
 	rocket.scale(0.5);
 	rocket.translate([0.5,2,2])
 	snap = SnappyHexMesh(rocket,4,case)
@@ -29,8 +27,7 @@ def main(case_dir='snappy'):
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
 	write_fv_schemes(case)
 	write_fv_solution(case)
-	snap.generate_mesh()
-	"""
+	snap.add_mesh_features({'nosecone', 'tube'})
 
 def create_new_case(case_dir):
 	"""Creates new case directory"""
