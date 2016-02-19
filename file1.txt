@@ -1,7 +1,0 @@
-master line
-temp
-
-newline here
-
-hello again
-hello, world!
