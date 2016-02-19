@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import math
 import pdb
 
-import firefish
+#import firefish
 
 dt = 1
 duration = 100
