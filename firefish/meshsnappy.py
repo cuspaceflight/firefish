@@ -137,6 +137,100 @@ class SnappyHexMesh(object):
 		with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
 			d.update(snappy_dict)
 
+	def write_snappy_dict_multipart(self, part_list):
+		"""Writes the SHM dictionary
+
+		.. note::
+			This is called by SnappyHexMesh when it generates the mesh
+		"""
+		feature_list = []
+		refinement_surface_dict = {}
+		layer_dict = {}
+
+		for part in part_list:
+			file_dict = {'file' : '"{}.eMesh"'.format(part),
+		   'level' : self.surfaceRefinement}
+			feature_list.append(file_dict)
+		
+			refinement_surface = {part : {
+								 'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}}
+			refinement_surface_dict.update(refinement_surface)
+
+			layer = {part : {'nSurfaceLayers' : self.nSurfaceLayers}}
+			layer_dict.update(layer)
+
+		snappy_dict = {
+
+			'castellatedMesh' : self.castellate,
+			'snap' : self.snap,
+			'addLayers' : self.addLayers,
+			'geometry' : {
+				self.geom.filename : {
+					'type' : 'triSurfaceMesh'},
+				},
+			'castellatedMeshControls' : {
+				'maxLocalCells' : self.maxLocalCells,
+				'maxGlobalCells' : self.maxGlobalCells,
+				'minRefinementCells' : self.minRefinementCells,
+				'maxLoadUnbalance' : self.maxLoadUnbalance,
+				'nCellsBetweenLevels' : self.nCellsBetweenLevels,
+				
+
+				'features' : feature_list,
+				
+
+				'refinementSurfaces': refinement_surface_dict,
+
+				'resolveFeatureAngle' : self.resolveFeatureAngle,
+				'refinementRegions' : {self.geom.filename :
+									   {'mode' : 'distance',
+										'levels' :([[(self.distanceRefinements[x],\
+													  self.distanceLevels[x])] for x in\
+													range(len(self.distanceRefinements))])}},
+				'locationInMesh' : self.locationToKeep,
+				'allowFreeStandingZoneFaces' : self.allowFreeStandingFaces
+				},
+			'snapControls' :
+			{
+				'nSmoothPatch' : self.nSmoothPatch,
+				'tolerance' : self.snapTolerance,
+				'nRelaxIter' : self.nRelaxIter,
+				'nSolveIter' : self.nSolveIter,
+				'nFeatureSnapIter' : self.nFeatureSnapIter,
+				'implicitFeatureSnap' : self.implicitFeatureSnap,
+				'explicitFeatureSnap' : self.explicitFeatureSnap,
+				'multiRegionFeatureSnap' : self.multiRegionFeatureSnap,
+				},
+			'addLayersControls' :
+			{
+				'relativeSizes' : self.relativeSizes,
+				'expansionRatio' : self.expansionRatio,
+				'finalLayerThickness' : self.finalLayerThickness,
+				'minThickness' : self.minThickness,
+				'nGrow' : self.nGrow,
+				'layers': layer_dict,	
+				'featureAngle' : self.featureAngle,
+				'slipFeatureAngle' : self.slipFeatureAngle,
+				'nRelaxIter' : self.nRelaxIter,
+				'nSmoothSurfaceNormals' : self.nSmoothSurfaceNormals,
+				'nSmoothNormals' : self.nSmoothNormals,
+				'nSmoothThickness' : self.nSmoothThickness,
+				'maxFaceThicknessRatio' : self.maxFaceThicknessratio,
+				'maxThicknessToMedialRatio' : self.maxThicknessToMedialRatio,
+				'minMedianAxisAngle' : self.minMedianAxisAngle,
+				'nBufferCellsNoExtrude' : self.nBufferCellsNoExtrude,
+				'nLayerIter' : self.nLayerIter
+				},
+			'meshQualityControls' :
+			{
+				'#include' : '"meshQualityDict"'
+				},
+			'mergeTolerance' : self.mergeTolerance
+			}
+		with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
+			d.update(snappy_dict)
+	
+
 	def generate_mesh(self):
 		"""Generates the mesh
 
@@ -154,4 +248,3 @@ class SnappyHexMesh(object):
 	def add_mesh_features(self, file_list):
 		"""test function which runs add_features in order to write the surfaceFeatureExtractDict"""
 		self.geom.add_features(file_list) 
-
