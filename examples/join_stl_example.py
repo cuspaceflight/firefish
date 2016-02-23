@@ -27,9 +27,8 @@ def main(case_dir='snappy'):
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
 	write_fv_schemes(case)
 	write_fv_solution(case)
-	part_list = {'nosecone', 'tube'}
-	snap.add_mesh_features(part_list)
-	snap.write_snappy_dict_multipart(part_list)
+	part_list = ['nosecone', 'tube']
+	snap.generate_mesh_multipart(part_list)
 
 def create_new_case(case_dir):
 	"""Creates new case directory"""
