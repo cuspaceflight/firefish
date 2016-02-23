@@ -146,10 +146,14 @@ class SnappyHexMesh(object):
 		feature_list = []
 		refinement_surface_dict = {}
 		layer_dict = {}
+		geom_dict = {}
 
 		for part in part_list:
+			geom = {'"{}.stl"'.format(part) : {'type':'triSurfaceMesh', 'name':part}}
+			geom_dict.update(geom)
+
 			file_dict = {'file' : '"{}.eMesh"'.format(part),
-		   'level' : self.surfaceRefinement}
+		   				'level' : self.surfaceRefinement}
 			feature_list.append(file_dict)
 		
 			refinement_surface = {part : {
@@ -164,25 +168,17 @@ class SnappyHexMesh(object):
 			'castellatedMesh' : self.castellate,
 			'snap' : self.snap,
 			'addLayers' : self.addLayers,
-			'geometry' : {
-				self.geom.filename : {
-					'type' : 'triSurfaceMesh'},
-				},
+			'geometry' :geom_dict,
 			'castellatedMeshControls' : {
 				'maxLocalCells' : self.maxLocalCells,
 				'maxGlobalCells' : self.maxGlobalCells,
 				'minRefinementCells' : self.minRefinementCells,
 				'maxLoadUnbalance' : self.maxLoadUnbalance,
 				'nCellsBetweenLevels' : self.nCellsBetweenLevels,
-				
-
 				'features' : feature_list,
-				
-
 				'refinementSurfaces': refinement_surface_dict,
-
 				'resolveFeatureAngle' : self.resolveFeatureAngle,
-				'refinementRegions' : {self.geom.filename :
+				'refinementRegions' : {part_list[0] :
 									   {'mode' : 'distance',
 										'levels' :([[(self.distanceRefinements[x],\
 													  self.distanceLevels[x])] for x in\
@@ -243,6 +239,12 @@ class SnappyHexMesh(object):
 		self.geom.extract_features()
 		self.geom.meshSettings.write_settings(self.case)
 		self.write_snappy_dict()
+		self.case.run_tool('snappyHexMesh')
+
+	def generate_mesh_multipart(self, part_list):
+		self.geom.add_features(part_list)
+		self.geom.meshSettings.write_settings(self.case)
+		self.write_snappy_dict_multipart(part_list)
 		self.case.run_tool('snappyHexMesh')
 
 	def add_mesh_features(self, file_list):
