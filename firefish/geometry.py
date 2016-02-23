@@ -27,7 +27,7 @@ class MeshQualitySettings(object):
 		self.maxInternalSkewness = 4
 		self.maxConcave = 80
 		self.minFlatness = 0.5
-		self.ominVol = 1e-13
+		self.minVol = 1e-13
 		self.minArea = -1
 		self.minTwist = 0.05
 		self.minDeterminant = 0.001
