@@ -153,9 +153,9 @@ class SnappyHexMesh(object):
 			geom_dict.update(geom)
 
 			file_dict = {'file' : '"{}.eMesh"'.format(part),
-		   				'level' : self.surfaceRefinement}
+						'level' : self.surfaceRefinement}
 			feature_list.append(file_dict)
-		
+
 			refinement_surface = {part : {
 								 'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}}
 			refinement_surface_dict.update(refinement_surface)
@@ -204,7 +204,7 @@ class SnappyHexMesh(object):
 				'finalLayerThickness' : self.finalLayerThickness,
 				'minThickness' : self.minThickness,
 				'nGrow' : self.nGrow,
-				'layers': layer_dict,	
+				'layers': layer_dict,
 				'featureAngle' : self.featureAngle,
 				'slipFeatureAngle' : self.slipFeatureAngle,
 				'nRelaxIter' : self.nRelaxIter,
@@ -225,7 +225,7 @@ class SnappyHexMesh(object):
 			}
 		with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
 			d.update(snappy_dict)
-	
+
 
 	def generate_mesh(self):
 		"""Generates the mesh
@@ -249,4 +249,4 @@ class SnappyHexMesh(object):
 
 	def add_mesh_features(self, file_list):
 		"""test function which runs add_features in order to write the surfaceFeatureExtractDict"""
-		self.geom.add_features(file_list) 
+		self.geom.add_features(file_list)

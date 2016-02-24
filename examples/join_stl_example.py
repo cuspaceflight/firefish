@@ -16,8 +16,8 @@ def main(case_dir='snappy'):
 	#write the base block mesh
 	make_block_mesh(case)
 
-	rocket = Geometry(GeometryFormat.STL,'example.stl','example',case)
-	rocket.scale(0.5);
+	rocket = Geometry(GeometryFormat.STL,'example.stl','whole',case)
+	#rocket.scale(0.5);
 	rocket.translate([0.5,2,2])
 	snap = SnappyHexMesh(rocket,4,case)
 	snap.snap=True
@@ -64,7 +64,7 @@ def write_control_dict(case):
 
 	with case.mutable_data_file(FileName.CONTROL) as d:
 		d.update(control_dict)
-		
+
 def make_block_mesh(case):
 	"""Creates a block mesh to bound the geometry"""
 	block_mesh_dict = {
@@ -112,9 +112,9 @@ def make_block_mesh(case):
 
 	with case.mutable_data_file(FileName.BLOCK_MESH) as d:
 		d.update(block_mesh_dict)
-		
+
 	case.run_tool('blockMesh')
-	
+
 def write_fv_solution(case):
 	"""Creates a default fvSolution dictionary so SHM can run"""
 	fv_solution = {
