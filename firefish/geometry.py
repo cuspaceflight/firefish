@@ -81,8 +81,8 @@ class Geometry(object):
 
 		if geomType == GeometryFormat.STL:
 			self.filename = '{}.stl'.format(self.name)
-			self.geom = stl_load(path)
-
+			#self.geom = stl_load(path)
+			self.geom = None
 
 		self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
 
@@ -95,6 +95,12 @@ class Geometry(object):
 		if self.geomType == GeometryFormat.STL:
 			self.geom = stl_translate(self.geom, delta)
 
+	def recentre(self):
+		"""Recentres the geometry"""
+
+		if self.geomType == GeometryFormat.STL:
+			self.geom = stl_recentre(self.geom)
+		
 	def scale(self, factor):
 		"""Scales geometry by factor
 
@@ -131,14 +137,13 @@ class Geometry(object):
 		"""
 		if not self.saved:
 			for name in file_list:
-				self.case.add_tri_surface(name, self.geom)
+				self.case.add_tri_surface(name, stl_load('{}.stl'.format(name)))
 
 		surface_extract_dict = {}
 		for name in file_list:
 			file_dict = {
 				'{}.stl'.format(name) : {'extractionMethod' : 'extractFromSurface',
-										  'extractFromSurfaceCoeffs' : {'includedAngle' : 180,
-																		'geometricTestOnly' : True},
+										  'extractFromSurfaceCoeffs' : {'includedAngle' : 180},
 										  'writeObj' : 'yes'}
 			}
 			surface_extract_dict.update(file_dict)
