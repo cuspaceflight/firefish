@@ -99,7 +99,7 @@ class Geometry(object):
 
 		if self.geomType == GeometryFormat.STL:
 			self.geom = stl_recentre(self.geom)
-		
+
 	def scale(self, factor):
 		"""Scales geometry by factor
 
