@@ -16,9 +16,7 @@ def main(case_dir='snappy'):
 	#write the base block mesh
 	make_block_mesh(case)
 
-	rocket = Geometry(GeometryFormat.STL,'example.stl','whole',case)
-	#rocket.scale(0.5);
-	rocket.translate([0.5,2,2])
+	rocket = Geometry(GeometryFormat.STL,'whole.stl','whole',case)
 	snap = SnappyHexMesh(rocket,4,case)
 	snap.snap=True
 	snap.snapTolerance = 8;
@@ -70,8 +68,8 @@ def make_block_mesh(case):
 	block_mesh_dict = {
 
 		'vertices': [
-			[0, 0, 0], [6, 0, 0], [6, 3, 0], [0, 3, 0],
-			[0, 0, 3], [6, 0, 3], [6, 3, 3], [0, 3, 3],
+			[-3, -1, -1], [3, -1, -1], [3, 1, -1], [-3, 1, -1],
+			[-3, -1, 1], [3, -1, 1], [3, 1, 1], [-3, 1, 1],
 		],
 
 		'blocks': [

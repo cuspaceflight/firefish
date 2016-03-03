@@ -81,8 +81,7 @@ class Geometry(object):
 
 		if geomType == GeometryFormat.STL:
 			self.filename = '{}.stl'.format(self.name)
-			#self.geom = stl_load(path)
-			self.geom = None
+			self.geom = stl_load(path)
 
 		self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
 
