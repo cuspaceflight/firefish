@@ -19,7 +19,7 @@ class GeometryFormat(enum.Enum):
 
 class MeshQualitySettings(object):
 	"""Controls the mesh quality settings associated with the gometry"""
-	# pylint: disable=too-many-instance-attributes
+	# pylint: disable-all
 	def __init__(self):
 		"""Initiates itself with a set of default mesh quality settings"""
 		self.maxNonOrtho = 65
@@ -63,7 +63,7 @@ class MeshQualitySettings(object):
 class Geometry(object):
 	"""This class encapsulates the geometry functionality"""
 
-	# pylint: disable=too-many-instance-attributes
+	# pylint: disable-all
 	def __init__(self, geomType, path, name, case):
 		"""Initialises settings and loads the geometry into memory
 
