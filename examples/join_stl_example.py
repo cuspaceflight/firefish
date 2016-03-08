@@ -4,10 +4,14 @@ Example which demonstrates the use of SnappyHexMesh
 import os
 
 from firefish.case import (
-	Case, FileName)
+	Case, FileName, FileClass, Dimension)
 from firefish.geometry import (
 	Geometry,GeometryFormat)
 from firefish.meshsnappy import SnappyHexMesh
+
+part_list = ['nosecone', 'tube']
+streamVelocity = 10
+
 
 def main(case_dir='snappy'):
 	#Create a new case file, raise an error if the directory already exists
@@ -15,7 +19,6 @@ def main(case_dir='snappy'):
 	write_control_dict(case)
 	#write the base block mesh
 	make_block_mesh(case)
-
 	rocket = Geometry(GeometryFormat.STL,'whole.stl','whole',case)
 	snap = SnappyHexMesh(rocket,4,case)
 	snap.snap=True
@@ -23,10 +26,12 @@ def main(case_dir='snappy'):
 	snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
 	snap.addLayers=False
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
+	write_transport_properties(case)
 	write_fv_schemes(case)
 	write_fv_solution(case)
-	part_list = ['nosecone', 'tube']
+	write_initial_conditions(case)
 	snap.generate_mesh_multipart(part_list)
+	#case.run_tool('icoFoam')
 
 def create_new_case(case_dir):
 	"""Creates new case directory"""
@@ -47,8 +52,8 @@ def write_control_dict(case):
 		'startFrom': 'startTime',
 		'startTime': 0,
 		'stopAt': 'endTime',
-		'endTime': 0.5,
-		'deltaT': 0.005,
+		'endTime': 0.05,
+		'deltaT': 0.000025,
 		'writeControl': 'timeStep',
 		'writeInterval': 20,
 		'purgeWrite': 0,
@@ -84,25 +89,23 @@ def make_block_mesh(case):
 		# Note the odd way in which boundary is defined here as a
 		# list of tuples.
 		'boundary': [
-			('movingWall', {
-				'type': 'wall',
-				'faces': [ [3, 7, 6, 2] ],
+			('inlet', {
+				'type': 'inlet',
+				'faces': [ [0, 3, 4, 7] ],
+			}),
+			('outlet', {
+				'type': 'outlet',
+				'faces': [ [2, 6, 5, 1] ],
 			}),
 			('fixedWalls', {
 				'type': 'wall',
 				'faces': [
-					[0, 4, 7, 3],
-					[2, 6, 5, 1],
-					[1, 5, 4, 0],
-				],
-			}),
-			('frontAndBack', {
-				'type': 'empty',
-				'faces': [
+					[4, 7, 6, 5],
+					[7, 6, 3, 2],
 					[0, 3, 2, 1],
-					[4, 5, 6, 7],
+					[4, 5, 0, 1],
 				],
-			}),
+			})
 		],
 
 		'mergePatchPairs': [],
@@ -112,6 +115,10 @@ def make_block_mesh(case):
 		d.update(block_mesh_dict)
 
 	case.run_tool('blockMesh')
+
+def write_transport_properties(case):
+	with case.mutable_data_file(FileName.TRANSPORT_PROPERTIES) as tp:
+		tp['nu'] = (Dimension(0, 2, -1, 0, 0, 0, 0), 0.01)
 
 def write_fv_solution(case):
 	"""Creates a default fvSolution dictionary so SHM can run"""
@@ -155,6 +162,57 @@ def write_fv_schemes(case):
 
 	with case.mutable_data_file(FileName.FV_SCHEMES) as d:
 		d.update(fv_schemes)
+
+def write_initial_conditions(case):
+	"""Sets the initial conditions"""
+	# Create the p initial conditions
+	p_file = case.mutable_data_file(
+		'0/p', create_class=FileClass.SCALAR_FIELD_3D
+	)
+	partBoundaries = {}
+	for part in part_list:
+		partDict = {part:{'type':'zeroGradient'}}
+		partBoundaries.update(partDict)
+
+	boundaryDict = {
+		'inlet' : {'type' : 'fixedValue', 'value' : 'uniform 1'},
+		'outlet': {'type': 'zeroGradient'},
+		'fixedWalls': {'type': 'zeroGradient'}
+	}
+	boundaryDict.update(partBoundaries)
+
+	with p_file as p:
+		p.update({
+			'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
+			'internalField': ('uniform', 1),
+			'boundaryField':boundaryDict
+		})
+	# Create the U initial conditions
+	U_file = case.mutable_data_file(
+		'0/U', create_class=FileClass.VECTOR_FIELD_3D
+	)
+	partVelocities = {}
+	for part in part_list:
+		partDict = {part:{'type':'slip'}}
+		partVelocities.update(partDict)
+
+	boundaryDict = {
+		'inlet' : {'type' : 'fixedValue',
+				   'value' : ('uniform', [streamVelocity, 0, 0])},
+		'outlet': {
+			'type': 'zeroGradient'
+		},
+		'fixedWalls': {
+			'type': 'zeroGradient'
+		}
+	}
+	boundaryDict.update(partVelocities)
+	with U_file as U:
+		U.update({
+			'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
+			'internalField': ('uniform', [streamVelocity, 0, 0]),
+			'boundaryField': boundaryDict
+		})
 
 if __name__ == '__main__':
 	main()
