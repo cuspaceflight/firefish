@@ -1,4 +1,4 @@
-import cusfsim.io as cio
+import firefish.io as cio
 import os
 import pytest
 

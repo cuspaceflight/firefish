@@ -4,24 +4,29 @@ Reference
 OpenFOAM case directory manipulation
 ------------------------------------
 
-.. automodule:: cusfsim.case
+.. automodule:: firefish.case
    :members:
 
 IO
 --
 
-.. automodule:: cusfsim.io
+.. automodule:: firefish.io
    :members:
 
 Geometry manipulation
 ---------------------
 
-.. automodule:: cusfsim.geometry
+.. automodule:: firefish.geometry
+   :members:
+   
+Mesh generation
+---------------------
+.. automodule:: firefish.meshsnappy
    :members:
 
 Fin-flutter
 -----------
 
-.. automodule:: cusfsim.finflutter
+.. automodule:: firefish.finflutter
    :members:
 

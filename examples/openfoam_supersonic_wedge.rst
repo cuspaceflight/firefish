@@ -11,7 +11,7 @@ script provides an example of setting up a compressible flow solver in OpenFoam.
 
 
 As in :download:`openfoam_cavity_tutorial.py <../examples/openfoam_cavity_tutorial.py>`
-we set up the OpenFOAM case directory using the *cusfsim.case* framework.
+we set up the OpenFOAM case directory using the *firefish.case* framework.
 
 For flows with a Mach number above 0.3 compressible effects become non negligible. A
 compressible solver must therefore be used. In this case we use *rhoCentralFoam*. The

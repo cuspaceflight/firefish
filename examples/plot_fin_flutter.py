@@ -12,7 +12,7 @@ matplotlib.use('PDF')
 
 import numpy as np
 from matplotlib import pyplot as plt
-from cusfsim.finflutter import model_atmosphere, flutter_velocity
+from firefish.finflutter import model_atmosphere, flutter_velocity_transonic, flutter_velocity_supersonic
 
 def main(output='flutter-velocity-example.pdf'):
     """
@@ -23,15 +23,19 @@ def main(output='flutter-velocity-example.pdf'):
     >>> assert fobj.getvalue()[:4] == b'%PDF'
 
     """
-    zs = np.linspace(0, 50000, 200)
-    ps, _, ss = model_atmosphere(zs)
-    vs = flutter_velocity(ps, ss, 20, 10, 10, 0.2)
+    zs = np.linspace(0, 20000, 200)
+    ps, ts, ss = model_atmosphere(zs)
+    rhos = (ps/1000) / (0.2869 * (ts + 273.1))
+    vs_t = flutter_velocity_transonic(ps, ss, 20, 10, 10, 0.2)
+    vs_s = flutter_velocity_supersonic(rhos, 380, 104, 1, 0.3, 0.0313, 0.0855, 3)
 
     plt.figure()
-    plt.plot(zs * 1e-3, vs)
+    plt.plot(zs * 1e-3, vs_t, 'r', label="transonic flutter velocity")
+    plt.plot(zs*1e-3, vs_s, 'g', label="supersonic flutter velocity, Mach 3")
     plt.title('Flutter velocity vs altitude')
     plt.xlabel('Altitude [km]')
     plt.ylabel('Flutter velocity [m/s]')
+    plt.legend()
     plt.savefig(output, format='PDF')
 
 if __name__ == '__main__':

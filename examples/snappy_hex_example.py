@@ -1,46 +1,37 @@
 """
-Example which re-creates the OpenFOAM cavity tutorial case.
-
->>> import os
->>> case_dir = os.path.join(getfixture('tmpdir').strpath, 'cavity')
->>> main(case_dir)
->>> os.path.isdir(os.path.join(case_dir, '0.5'))
-True
-
+Example which demonstrates the use of SnappyHexMesh
 """
 import os
 
 from firefish.case import (
-    Case, Dimension, FileName, FileClass
-)
+    Case, FileName)
+from firefish.geometry import (
+    Geometry,GeometryFormat)
+from firefish.meshsnappy import SnappyHexMesh
 
-def main(case_dir='cavity'):
-    # Create a new case file, raising RuntimeError if the directory already
-    # exists.
+def main(case_dir='snappy'):
+    #Create a new case file, raise an error if the directory already exists
     case = create_new_case(case_dir)
+    write_control_dict(case)
+    #write the base block mesh
+    make_block_mesh(case)
 
-    # Add the information needed by blockMesh.
-    write_initial_control_dict(case)
-    write_block_mesh_dict(case)
-
-    # At this point there is enough to run blockMesh.
-    case.run_tool('blockMesh')
-
-    # Update the physical properties.
-    with case.mutable_data_file(FileName.TRANSPORT_PROPERTIES) as tp:
-        tp['nu'] = (Dimension(0, 2, -1, 0, 0, 0, 0), 0.01)
-
-    # Write the fvSolution and fvSchemes files.
-    write_fv_solution(case)
+    rocket = Geometry(GeometryFormat.STL,'example.stl','example',case)
+    rocket.scale(0.5);
+    rocket.translate([0.5,2,2])
+    
+    snap = SnappyHexMesh(rocket,4,case)
+    snap.snap=True
+    snap.snapTolerance = 8;
+    snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
+    snap.addLayers=False
+    #we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
     write_fv_schemes(case)
-
-    # Write the initial conditions for the p and U fields.
-    write_initial_conditions(case)
-
-    # Run the icoFoam application.
-    case.run_tool('icoFoam')
-
+    write_fv_solution(case)
+    snap.generate_mesh()
+    
 def create_new_case(case_dir):
+    """Creates new case directory"""
     # Check that the specified case directory does not already exist
     if os.path.exists(case_dir):
         raise RuntimeError(
@@ -50,8 +41,9 @@ def create_new_case(case_dir):
     # Create the case
     return Case(case_dir)
 
-def write_initial_control_dict(case):
-    # Control dict from tutorial
+def write_control_dict(case):
+    """Sets up a token control dictionary"""
+    #This is a token control dict needed in order to get everything to run
     control_dict = {
         'application': 'icoFoam',
         'startFrom': 'startTime',
@@ -72,19 +64,19 @@ def write_initial_control_dict(case):
 
     with case.mutable_data_file(FileName.CONTROL) as d:
         d.update(control_dict)
-
-def write_block_mesh_dict(case):
+        
+def make_block_mesh(case):
+    """Creates a block mesh to bound the geometry"""
     block_mesh_dict = {
-        'convertToMeters': 0.1,
 
         'vertices': [
-            [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
-            [0, 0, 0.1], [1, 0, 0.1], [1, 1, 0.1], [0, 1, 0.1],
+            [0, 0, 0], [6, 0, 0], [6, 3, 0], [0, 3, 0],
+            [0, 0, 3], [6, 0, 3], [6, 3, 3], [0, 3, 3],
         ],
 
         'blocks': [
             (
-                'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 1],
+                'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 20],
                 'simpleGrading', [1, 1, 1],
             )
         ],
@@ -120,8 +112,11 @@ def write_block_mesh_dict(case):
 
     with case.mutable_data_file(FileName.BLOCK_MESH) as d:
         d.update(block_mesh_dict)
-
+        
+    case.run_tool('blockMesh')
+    
 def write_fv_solution(case):
+    """Creates a default fvSolution dictionary so SHM can run"""
     fv_solution = {
         'solvers': {
             'p': {
@@ -149,6 +144,8 @@ def write_fv_solution(case):
         d.update(fv_solution)
 
 def write_fv_schemes(case):
+    """Creates a default fvSchemes dictionary so SHM can run"""
+    #needed so we can view it in paraFoam
     fv_schemes = {
         'ddtSchemes': { 'default': 'Euler' },
         'gradSchemes': { 'default': 'Gauss linear', 'grad(p)': 'Gauss linear' },
@@ -160,41 +157,6 @@ def write_fv_schemes(case):
 
     with case.mutable_data_file(FileName.FV_SCHEMES) as d:
         d.update(fv_schemes)
-
-def write_initial_conditions(case):
-    # Create the p initial conditions
-    p_file = case.mutable_data_file(
-        '0/p', create_class=FileClass.SCALAR_FIELD_3D
-    )
-    with p_file as p:
-        p.update({
-            'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
-            'internalField': ('uniform', 0),
-            'boundaryField': {
-                'movingWall': { 'type': 'zeroGradient' },
-                'fixedWalls': { 'type': 'zeroGradient' },
-                'frontAndBack': { 'type': 'empty' },
-            },
-        })
-
-    # Create the U initial conditions
-    U_file = case.mutable_data_file(
-        '0/U', create_class=FileClass.VECTOR_FIELD_3D
-    )
-    with U_file as U:
-        U.update({
-            'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
-            'internalField': ('uniform', [0, 0, 0]),
-            'boundaryField': {
-                'movingWall': {
-                    'type': 'fixedValue', 'value': ('uniform', [1, 0, 0])
-                },
-                'fixedWalls': {
-                    'type': 'fixedValue', 'value': ('uniform', [0, 0, 0])
-                },
-                'frontAndBack': { 'type': 'empty' },
-            },
-        })
 
 if __name__ == '__main__':
     main()

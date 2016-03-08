@@ -26,7 +26,7 @@ from PyFoam.RunDictionary.ParsedParameterFile import (
 ## EXCEPTIONS
 
 class CaseException(Exception):
-    """Base class for exceptions raised by cusfsim.case module."""
+    """Base class for exceptions raised by firefish.case module."""
 
 class CaseDoesNotExist(CaseException):
     """A case directory did not exist when we expected it to."""
@@ -54,11 +54,23 @@ class FileName(enum.Enum):
     #: blockMeshDict
     BLOCK_MESH = _sys_path('blockMeshDict')
 
+    #: mirrorMeshDict
+    MIRROR_MESH = _sys_path('mirrorMeshDict')
+
     #: fvSolution
     FV_SOLUTION = _sys_path('fvSolution')
 
     #: fvSchemes
     FV_SCHEMES = _sys_path('fvSchemes')
+
+    #: qualitySettings
+    MESH_QUALITY_SETTINGS = _sys_path('meshQualityDict')
+
+    #: surface feature extract
+    SURFACE_FEATURE_EXTRACT = _sys_path('surfaceFeatureExtractDict')
+
+    #: snappyHexMesh
+    SNAPPY_HEX_MESH = _sys_path('snappyHexMeshDict')
 
     #: transportProperties
     TRANSPORT_PROPERTIES = _constant_path('transportProperties')
@@ -69,6 +81,10 @@ class FileName(enum.Enum):
     #: turbulence Properties
     TURBULENCE_PROPERTIES = _constant_path('turbulenceProperties')
 
+class MeshGenerator(enum.Enum):
+    """An eumeration of different mesh generation methods"""
+    SNAPPY = 1
+    GMSH = 2
 
 class Dimension(PFDataStructs.Dimension):
     """Represents a value's dimensions in OpenFOAM cases.
@@ -112,7 +128,7 @@ class Dimension(PFDataStructs.Dimension):
     >>> d.unit
     'ms^-2'
     >>> repr(d)
-    'cusfsim.case.Dimension(0, 1, -2, 0, 0, 0, 0)'
+    'firefish.case.Dimension(0, 1, -2, 0, 0, 0, 0)'
 
     The class also supports indexing and the sequence property
 
@@ -148,7 +164,7 @@ class Dimension(PFDataStructs.Dimension):
 
 # Monkey-patch PyFOAM to ensure our Dimension type is returned from parsing
 # functions. This is not terribly elegant to say the least and isn't documented
-# but cusfsim tries very hard to hide PyFOAM's API from the user.
+# but firefish tries very hard to hide PyFOAM's API from the user.
 def _monkey_patch_pyfoam():
     from PyFoam.Basics.FoamFileGenerator import FoamFileGenerator
     import PyFoam.RunDictionary.ParsedParameterFile as ParsedParameterFileModule
@@ -185,7 +201,6 @@ def read_data_file(path):
         IOError: the path could not be read from
     """
     return ParsedParameterFile(path).content
-
 
 class Case(object):
     """Object representing an OpenFOAM case on disk.
@@ -262,7 +277,7 @@ class Case(object):
         """
         return read_data_file(self._get_rel_path(_to_dict_path(path)))
 
-    def run_tool(self, tool_name):
+    def run_tool(self, tool_name, flags=""):
         """Run an OpenFOAM tool on the case.
 
         It is assumed that the tool accepts the standard "-case" argument.
@@ -283,6 +298,9 @@ class Case(object):
 
         # We assume that the tool can take a -case argument
         args = [tool_name, '-case', self.root_dir_path]
+
+        if flags:
+            args.append(flags)
 
         # Run the command
         try:
