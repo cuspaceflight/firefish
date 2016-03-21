@@ -8,10 +8,10 @@ from firefish.case import (
 from firefish.geometry import (
 	Geometry,GeometryFormat)
 from firefish.meshsnappy import SnappyHexMesh
+from subprocess import call
 
-part_list = ['nosecone', 'tube']
+part_list = ['nosecone', 'tube']	
 streamVelocity = 10
-
 
 def main(case_dir='snappy'):
 	#Create a new case file, raise an error if the directory already exists
@@ -19,7 +19,7 @@ def main(case_dir='snappy'):
 	write_control_dict(case)
 	#write the base block mesh
 	make_block_mesh(case)
-	rocket = Geometry(GeometryFormat.STL,'whole.stl','whole',case)
+	rocket = Geometry(GeometryFormat.STL,'empty.stl','empty',case)
 	snap = SnappyHexMesh(rocket,4,case)
 	snap.snap=True
 	snap.snapTolerance = 8;
@@ -31,6 +31,11 @@ def main(case_dir='snappy'):
 	write_fv_solution(case)
 	write_initial_conditions(case)
 	snap.generate_mesh_multipart(part_list)
+	#the proper mesh is in the final time directory, delete the one in constant
+	#call (["cd", "snappy"], shell = True)
+	#call (["rm", "-r", "constant/polyMesh"], shell = True)
+	#call (["mv", "0.05/polyMesh", "constant/"], shell = True)
+	#call (["rm -r 0.*"], shell = True)
 	#case.run_tool('icoFoam')
 
 def create_new_case(case_dir):
@@ -52,17 +57,17 @@ def write_control_dict(case):
 		'startFrom': 'startTime',
 		'startTime': 0,
 		'stopAt': 'endTime',
-		'endTime': 0.05,
-		'deltaT': 0.000025,
+		'endTime': 1.2,
+		'deltaT': 0.02,
 		'writeControl': 'timeStep',
-		'writeInterval': 20,
+		'writeInterval': 2,
 		'purgeWrite': 0,
 		'writeFormat': 'ascii',
 		'writePrecision': 6,
 		'writeCompression': 'off',
 		'timeFormat': 'general',
 		'timePrecision': 6,
-		'runTimeModifiable': True,
+		'runTimeModifiable': True
 	}
 
 	with case.mutable_data_file(FileName.CONTROL) as d:
@@ -73,13 +78,13 @@ def make_block_mesh(case):
 	block_mesh_dict = {
 
 		'vertices': [
-			[-3, -1, -1], [3, -1, -1], [3, 1, -1], [-3, 1, -1],
-			[-3, -1, 1], [3, -1, 1], [3, 1, 1], [-3, 1, 1],
+			[-0.3, -1, -1], [3, -1, -1], [3, 1, -1], [-0.3, 1, -1],
+			[-0.3, -1, 1], [3, -1, 1], [3, 1, 1], [-0.3, 1, 1],
 		],
 
 		'blocks': [
 			(
-				'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 20],
+				'hex', [0, 1, 2, 3, 4, 5, 6, 7], [30, 30, 30],
 				'simpleGrading', [1, 1, 1],
 			)
 		],
@@ -175,7 +180,7 @@ def write_initial_conditions(case):
 		partBoundaries.update(partDict)
 
 	boundaryDict = {
-		'inlet' : {'type' : 'fixedValue', 'value' : 'uniform 1'},
+		'inlet' : {'type' : 'zeroGradient'},
 		'outlet': {'type': 'zeroGradient'},
 		'fixedWalls': {'type': 'zeroGradient'}
 	}
@@ -184,7 +189,7 @@ def write_initial_conditions(case):
 	with p_file as p:
 		p.update({
 			'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
-			'internalField': ('uniform', 1),
+			'internalField': ('uniform', 0),
 			'boundaryField':boundaryDict
 		})
 	# Create the U initial conditions
@@ -200,8 +205,8 @@ def write_initial_conditions(case):
 		'inlet' : {'type' : 'fixedValue',
 				   'value' : ('uniform', [streamVelocity, 0, 0])},
 		'outlet': {
-			'type': 'zeroGradient'
-		},
+			'type' : 'fixedValue',
+				   'value' : ('uniform', [streamVelocity, 0, 0])},
 		'fixedWalls': {
 			'type': 'zeroGradient'
 		}

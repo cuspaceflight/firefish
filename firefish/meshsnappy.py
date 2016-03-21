@@ -32,7 +32,7 @@ class SnappyHexMesh(object):
 		self.edgeRefinementLevel = 6
 		self.refinementSurfaceMin = 5
 		self.refinementSurfaceMax = 6
-		self.resolveFeatureAngle = 30
+		self.resolveFeatureAngle = 5
 		self.distanceRefinements = [0.1, 0.2]
 		self.distanceLevels = [4, 3]
 		self.locationToKeep = [0.001, 0.001, 0.0015]
@@ -49,7 +49,7 @@ class SnappyHexMesh(object):
 		self.nSurfaceLayers = 1
 		self.expansionRatio = 1
 		self.finalLayerThickness = 0.1
-		self.minThickness = 0.1
+		self.minThickness = 0.03
 		self.nGrow = 0
 		self.featureAngle = 60
 		self.slipFeatureAngle = 30
