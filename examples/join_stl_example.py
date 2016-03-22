@@ -10,9 +10,13 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-part_list = ['nosecone', 'tube']	
-streamVelocity = 10
-
+part_list = ['nosecone', 'upperTube']
+#part_list = ['streamDartNoHoles','nosecone', 'upperTube', 'lowerTube', 'finCan', 'tail']	
+streamVelocity = 2
+#21/03/16: import the whole rocket, and initiaise the boundary conditions for the whole rocket
+#file as before: e.g. slip for velocity, zeroGradient for the rest
+#then import the separate parts: these are simply "markers" so that the function objects know what to integrate over
+#the BCs for these will be empty for all the vars.
 def main(case_dir='snappy'):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
@@ -26,65 +30,77 @@ def main(case_dir='snappy'):
 	snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
 	snap.addLayers=False
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
-	write_transport_properties(case)
 	write_fv_schemes(case)
 	write_fv_solution(case)
+	write_thermophysical_properties(case)
+	write_turbulence_properties(case)
 	write_initial_conditions(case)
 	snap.generate_mesh_multipart(part_list)
-	#the proper mesh is in the final time directory, delete the one in constant
-	#call (["cd", "snappy"], shell = True)
-	#call (["rm", "-r", "constant/polyMesh"], shell = True)
-	#call (["mv", "0.05/polyMesh", "constant/"], shell = True)
-	#call (["rm -r 0.*"], shell = True)
+	getTrueMesh(case)
 	#case.run_tool('icoFoam')
+  
+def getTrueMesh(case):
+	#the proper mesh is in the final time directory, delete the one in constant
+	os.chdir("snappy")
+	call (["rm", "-r", "constant/polyMesh"])
+	call (["mv", "0.002/polyMesh", "constant/"])
+	call (["rm", "-r", "0.001/"])
+	call (["rm", "-r", "0.002/"])
 
 def create_new_case(case_dir):
 	"""Creates new case directory"""
 	# Check that the specified case directory does not already exist
 	if os.path.exists(case_dir):
-		raise RuntimeError(
-			'Refusing to write to existing path: {}'.format(case_dir)
-		)
+		call(["rm", "-r", "snappy"])
+		#raise RuntimeError(	
+		#    'Refusing to write to existing path: {}'.format(case_dir)
+		#)
 
 	# Create the case
 	return Case(case_dir)
 
 def write_control_dict(case):
-	"""Sets up a token control dictionary"""
-	#This is a token control dict needed in order to get everything to run
+	"""Sets up the control dictionary.
+	In this example we use the rhoCentralFoam compressible solver"""
+
+	# Control dict from tutorial
 	control_dict = {
-		'application': 'icoFoam',
+		'application': 'rhoCentralFoam',
 		'startFrom': 'startTime',
 		'startTime': 0,
 		'stopAt': 'endTime',
-		'endTime': 1.2,
-		'deltaT': 0.02,
-		'writeControl': 'timeStep',
-		'writeInterval': 2,
+		'endTime': 10,
+		'deltaT': 0.001,
+		'writeControl': 'runTime',
+		'writeInterval': 1,
 		'purgeWrite': 0,
 		'writeFormat': 'ascii',
 		'writePrecision': 6,
 		'writeCompression': 'off',
 		'timeFormat': 'general',
 		'timePrecision': 6,
-		'runTimeModifiable': True
+		'runTimeModifiable': True,
+		'adjustTimeStep' : 'no',
+		'maxCo' : 1,
+		'maxDeltaT' : 1e-6,
 	}
 
 	with case.mutable_data_file(FileName.CONTROL) as d:
 		d.update(control_dict)
-
+		
 def make_block_mesh(case):
 	"""Creates a block mesh to bound the geometry"""
 	block_mesh_dict = {
 
 		'vertices': [
-			[-0.3, -1, -1], [3, -1, -1], [3, 1, -1], [-0.3, 1, -1],
-			[-0.3, -1, 1], [3, -1, 1], [3, 1, 1], [-0.3, 1, 1],
+			[-0.6, -1, -1], [3, -1, -1], [3, 1, -1], [-0.6, 1, -1],
+			[-0.6, -1, 1], [3, -1, 1], [3, 1, 1], [-0.6, 1, 1],
+
 		],
 
 		'blocks': [
 			(
-				'hex', [0, 1, 2, 3, 4, 5, 6, 7], [30, 30, 30],
+				'hex', [0, 1, 2, 3, 4, 5, 6, 7], [20, 20, 20],
 				'simpleGrading', [1, 1, 1],
 			)
 		],
@@ -120,53 +136,58 @@ def make_block_mesh(case):
 		d.update(block_mesh_dict)
 
 	case.run_tool('blockMesh')
-
-def write_transport_properties(case):
-	with case.mutable_data_file(FileName.TRANSPORT_PROPERTIES) as tp:
-		tp['nu'] = (Dimension(0, 2, -1, 0, 0, 0, 0), 0.01)
-
+	
 def write_fv_solution(case):
-	"""Creates a default fvSolution dictionary so SHM can run"""
+	"""Sets fv_solution"""
 	fv_solution = {
-		'solvers': {
-			'p': {
-				'solver': 'PCG',
-				'preconditioner': 'DIC',
-				'tolerance': 1e-6,
-				'relTol': 0,
-			},
-			'U': {
-				'solver': 'smoothSolver',
-				'smoother': 'symGaussSeidel',
-				'tolerance': 1e-5,
-				'relTol': 0,
-			},
-		},
-		'PISO': {
-			'nCorrectors': 2,
-			'nNonOrthogonalCorrectors': 0,
-			'pRefCell': 0,
-			'pRefValue': 0,
-		}
-	}
-
+		'solvers' : {'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
+					 'U' : {'solver'  : 'smoothSolver',
+							'smoother' : 'GaussSeidel',
+							'nSweeps' : 2,
+							'tolerance' : 1e-09,
+							'relTol' : 0.01},
+					 'h' : {'$U' : ' ',
+							'tolerance' : 1e-10,
+							'relTol' : 0}}}
 	with case.mutable_data_file(FileName.FV_SOLUTION) as d:
 		d.update(fv_solution)
 
 def write_fv_schemes(case):
-	"""Creates a default fvSchemes dictionary so SHM can run"""
-	#needed so we can view it in paraFoam
+	"""Sets fv_schemes"""
 	fv_schemes = {
-		'ddtSchemes': { 'default': 'Euler' },
-		'gradSchemes': { 'default': 'Gauss linear', 'grad(p)': 'Gauss linear' },
-		'divSchemes': { 'div(phi,U)': 'Gauss linear', 'default': 'none' },
-		'laplacianSchemes': { 'default': 'Gauss linear orthogonal' },
-		'interpolationSchemes': { 'default': 'linear' },
-		'snGradSchemes': { 'default': 'orthogonal' },
-	}
-
+		'ddtSchemes'  : {'default' : 'Euler'},
+		'gradSchemes' : {'default' : 'Gauss linear'},
+		'divSchemes'  : {'default' : 'none', 'div(tauMC)' : 'Gauss linear'},
+		'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
+		'interpolationSchemes' : {'default' : 'linear',
+								  'reconstruct(rho)' : 'vanLeer',
+								  'reconstruct(U)' : 'vanLeerV',
+								  'reconstruct(T)': 'vanLeer'},
+		'snGradSchemes' : {'default': 'corrected'}}
 	with case.mutable_data_file(FileName.FV_SCHEMES) as d:
 		d.update(fv_schemes)
+
+def write_thermophysical_properties(case):
+	"""Sets the thermdynamic properties of the gas.
+	These are chosen such that at a temperature of 1K the speed of sound is
+	1m/s"""
+	thermo_dict = {
+		'thermoType' : {'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
+						'transport' : 'const', 'thermo'  : 'hConst',
+						'equationOfState' : 'perfectGas', 'specie' : 'specie',
+						'energy' : 'sensibleInternalEnergy'},
+		'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
+					  'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
+					  'transport' : {'mu' : 0, 'Pr' : 1}}}
+	with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
+		d.update(thermo_dict)
+
+def write_turbulence_properties(case):
+	"""Disables the turbulent solver"""
+	turbulence_dict = {
+		'simulationType' : 'laminar'}
+	with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
+		d.update(turbulence_dict)
 
 def write_initial_conditions(case):
 	"""Sets the initial conditions"""
@@ -178,18 +199,16 @@ def write_initial_conditions(case):
 	for part in part_list:
 		partDict = {part:{'type':'zeroGradient'}}
 		partBoundaries.update(partDict)
-
 	boundaryDict = {
-		'inlet' : {'type' : 'zeroGradient'},
+		'inlet' : {'type' : 'fixedValue', 'value' : 'uniform 1'},
 		'outlet': {'type': 'zeroGradient'},
 		'fixedWalls': {'type': 'zeroGradient'}
 	}
 	boundaryDict.update(partBoundaries)
-
 	with p_file as p:
 		p.update({
-			'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
-			'internalField': ('uniform', 0),
+			'dimensions': Dimension(1, -1, -2, 0, 0, 0, 0),
+			'internalField': ('uniform', 1),
 			'boundaryField':boundaryDict
 		})
 	# Create the U initial conditions
@@ -200,15 +219,14 @@ def write_initial_conditions(case):
 	for part in part_list:
 		partDict = {part:{'type':'slip'}}
 		partVelocities.update(partDict)
-
 	boundaryDict = {
 		'inlet' : {'type' : 'fixedValue',
 				   'value' : ('uniform', [streamVelocity, 0, 0])},
 		'outlet': {
-			'type' : 'fixedValue',
-				   'value' : ('uniform', [streamVelocity, 0, 0])},
+			'type' : 'zeroGradient'
+		},
 		'fixedWalls': {
-			'type': 'zeroGradient'
+			'type': 'slip'
 		}
 	}
 	boundaryDict.update(partVelocities)
@@ -216,6 +234,27 @@ def write_initial_conditions(case):
 		U.update({
 			'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
 			'internalField': ('uniform', [streamVelocity, 0, 0]),
+			'boundaryField': boundaryDict
+		})
+	#write T boundary conditions
+	T_file = case.mutable_data_file(
+		'0/T', create_class=FileClass.SCALAR_FIELD_3D
+	)
+	partBoundaries = {}
+	for part in part_list:
+		partDict = {part:{'type':'zeroGradient'}}
+		partBoundaries.update(partDict)
+
+	boundaryDict = {
+		'inlet' : {'type' : 'fixedValue', 'value' : ('uniform 1')},
+		'outlet': {'type': 'zeroGradient'},
+		'fixedWalls': {'type': 'zeroGradient'}
+	}
+	boundaryDict.update(partBoundaries)
+	with T_file as T:
+		T.update({
+			'dimensions': Dimension(0, 0, 0, 1, 0, 0, 0),
+			'internalField': ('uniform', 1),
 			'boundaryField': boundaryDict
 		})
 
