@@ -10,13 +10,8 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-part_list = ['nosecone', 'upperTube']
-#part_list = ['streamDartNoHoles','nosecone', 'upperTube', 'lowerTube', 'finCan', 'tail']	
+part_list = ['nosecone', 'upperTube', 'lowerTube', 'finCan', 'tail']	
 streamVelocity = 2
-#21/03/16: import the whole rocket, and initiaise the boundary conditions for the whole rocket
-#file as before: e.g. slip for velocity, zeroGradient for the rest
-#then import the separate parts: these are simply "markers" so that the function objects know what to integrate over
-#the BCs for these will be empty for all the vars.
 def main(case_dir='snappy'):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
@@ -25,8 +20,16 @@ def main(case_dir='snappy'):
 	make_block_mesh(case)
 	rocket = Geometry(GeometryFormat.STL,'empty.stl','empty',case)
 	snap = SnappyHexMesh(rocket,4,case)
-	snap.snap=True
-	snap.snapTolerance = 8;
+	###############un-comment out the code snippet below if you want to apply extra refinement#########
+	#snap.refinementSurfaceMin =7
+	#snap.maxGlobalCells=20000000
+	#snap.refinementSurfaceMax =8
+	#snap.distanceLevels = [7,6,4,2]
+	#snap.distanceRefinements = [0.01,0.02,0.06,0.2]
+	#snap.snap=True
+	#snap.snapTolerance = 8
+	#snap.edgeRefinementLevel = 8
+	###############un-comment out the code snippet below if you want to apply extra refinement#########
 	snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
 	snap.addLayers=False
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
@@ -37,7 +40,7 @@ def main(case_dir='snappy'):
 	write_initial_conditions(case)
 	snap.generate_mesh_multipart(part_list)
 	getTrueMesh(case)
-	#case.run_tool('icoFoam')
+	case.run_tool('rhoCentralFoam')
   
 def getTrueMesh(case):
 	#the proper mesh is in the final time directory, delete the one in constant
@@ -46,6 +49,7 @@ def getTrueMesh(case):
 	call (["mv", "0.002/polyMesh", "constant/"])
 	call (["rm", "-r", "0.001/"])
 	call (["rm", "-r", "0.002/"])
+	os.chdir("../")
 
 def create_new_case(case_dir):
 	"""Creates new case directory"""
@@ -83,6 +87,23 @@ def write_control_dict(case):
 		'adjustTimeStep' : 'no',
 		'maxCo' : 1,
 		'maxDeltaT' : 1e-6,
+		#function objects for calculating drag coefficients with the simulation
+		#forces given in body co-ordinates
+		'functions': {
+			'forces':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list,
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			'wallShearStress':{
+        		'type':'wallShearStress',  
+        		'functionObjectLibs': ['"libutilityFunctionObjects.so"'], 
+				'patches':part_list, 
+			}
+		}
 	}
 
 	with case.mutable_data_file(FileName.CONTROL) as d:
@@ -226,7 +247,7 @@ def write_initial_conditions(case):
 			'type' : 'zeroGradient'
 		},
 		'fixedWalls': {
-			'type': 'slip'
+			'type': 'zeroGradient'
 		}
 	}
 	boundaryDict.update(partVelocities)
