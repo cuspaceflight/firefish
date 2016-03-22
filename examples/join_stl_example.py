@@ -90,19 +90,22 @@ def write_control_dict(case):
 		#function objects for calculating drag coefficients with the simulation
 		#forces given in body co-ordinates
 		'functions': {
-			'forces':{
+			'forces1':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list,
+				'patches':part_list[0:1],
 				'rhoName': 'rhoInf',
 				'rhoInf':4.7,
 				'CofR':[0, 0, 0],
 			},
-			'wallShearStress':{
-        		'type':'wallShearStress',  
-        		'functionObjectLibs': ['"libutilityFunctionObjects.so"'], 
-				'patches':part_list, 
-			}
+			'forces2':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[1:2],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
 		}
 	}
 
