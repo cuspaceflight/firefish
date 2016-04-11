@@ -32,7 +32,7 @@ for ii, t in enumerate(times):
 
 		if t <= 50: 
 			Thrust = 2000.0
-			print Thrust
+			print(Thrust)
 		else: Thrust = 0.0
 
 		angles[ii,:] = angles[ii-1,:]
@@ -76,27 +76,14 @@ for ii, t in enumerate(times):
 		vdotbody = forces/timestepmass
 	
 		vdotglobal = np.dot(rotmat,vdotbody)
-		vdotglobal[-1] += -gravityacc
-		print('vdotlgobal:')
-		print(vdotglobal)
+		vdotglobal[2] += -gravityacc
+
 		# Convert forces from body to global
 		# Velocity integration from acceleration
 		vel0 = vel*1 # *1 to avoid copying variable reference
 		vel += vdotglobal*dt
-		
-		print('vel')
-		print(vel)
-		print('vel0')
-		print(vel0)
-		
 		posits[ii,:] += 0.5*(vel + vel0)*dt
-		print('dt is %f' %(dt))
 		
-		
-		print('pos:')
-		print(posits[ii,:])
-		
-		print('t is %f' %(t))
         
 
 
