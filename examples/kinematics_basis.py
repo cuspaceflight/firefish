@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math
-import pdb
 
 #import firefish
 
@@ -30,10 +28,11 @@ rot = np.zeros(3,float)
 for ii, t in enumerate(times):
 	if ii > 0:
 		dt = t - times[ii-1]
+		
 
 		if t <= 50: 
 			Thrust = 2000.0
-			print Thrust
+			print(Thrust)
 		else: Thrust = 0.0
 
 		angles[ii,:] = angles[ii-1,:]
@@ -77,28 +76,16 @@ for ii, t in enumerate(times):
 		vdotbody = forces/timestepmass
 	
 		vdotglobal = np.dot(rotmat,vdotbody)
-		vdotglobal[-1] += -gravityacc
+		vdotglobal[2] += -gravityacc
 
 		# Convert forces from body to global
-
 		# Velocity integration from acceleration
 		vel0 = vel*1 # *1 to avoid copying variable reference
 		vel += vdotglobal*dt
 		posits[ii,:] += 0.5*(vel + vel0)*dt
+		
+        
 
-plt.figure()
-plt.scatter(times[:],posits[:,0])
-plt.xlabel('Time')
-plt.ylabel('x')
-plt.figure()
-plt.scatter(times[:],posits[:,1])
-plt.xlabel('Time')
-plt.ylabel('y')
-plt.figure()
-plt.scatter(times[:],posits[:,2])
-plt.xlabel('Time')
-plt.ylabel('z')
-plt.show()
 
 
 	

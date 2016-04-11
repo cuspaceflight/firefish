@@ -30,3 +30,8 @@ Fin-flutter
 .. automodule:: firefish.finflutter
    :members:
 
+Kinematics
+--------------------
+.. automodule:: firefish.kinematics
+    :members:
+
