@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math
-import pdb
 
 #import firefish
 
@@ -101,21 +99,6 @@ for ii, t in enumerate(times):
 		print('t is %f' %(t))
         
 
-
-plt.figure()
-plt.scatter(times[:],posits[:,0])
-plt.xlabel('Time')
-plt.ylabel('x')
-plt.figure()
-plt.scatter(times[:],posits[:,1])
-plt.xlabel('Time')
-plt.ylabel('y')
-plt.figure()
-plt.scatter(times[:],posits[:,2])
-plt.xlabel('Time')
-plt.ylabel('z')
-plt.show()
-print('plotting')
 
 
 	

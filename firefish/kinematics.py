@@ -2,23 +2,45 @@
 This module deals with kinematic models used in rocket simulation
 """
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 
 import enum
 
 class KinematicBody(object):
+    """Encapsulates information about the kinematic body"""
+    
     def __init__(self,mass,inertias):
+        """
+        Initialises the kinematic body
+        Args:
+            mass (float): the mass of the body
+            inertias ([float,float,float]): Principal moments of inertia in form [Ixx,Iyy,Izz]
+        """
         self.mass = mass
         self.MoI = inertias
         self.vel = np.zeros(3,float)
         self.rot = np.zeros(3,float)
         
     def update_moi(self):
-        '''We update moments of inertias. This should be overloaded by inherting classes'''
+        """
+        We update moments of inertias.
+        Any class inheriting KinematicBody must overload this if it has non-constant
+        moments of inertia
+        """
         
 class KinematicSimulation(object):
+    """
+    Encapsulates all the simulation logic and time stepping
+    """
     def __init__(self,body,gravity,duration,dt):
+        """
+        Initialises the simulation
+        Args:
+            body (firefish.kinematics.KinematicBody): the kinematic body to simulate
+            gravity (float): accelaration due to gravity in ms^-2
+            duration (float): duration of the simulation in s
+            dt (float): time step of the simulation in s
+        """
         self.g = gravity
         self.body = body
         self.times = np.linspace(0,duration,num=duration/dt + 1)
@@ -27,6 +49,14 @@ class KinematicSimulation(object):
         self.dt = dt
         self.tIndex = 1 #means we have t=0 as being on the pad
     def time_step(self,forces,torques,mdot):
+        """
+        Performs a single time step
+        
+        Args:
+            forces ([float]): A list of the forces on the body in N in the form [Fx,Fy,Fz]
+            torques ([float]): A lst of the moments acting on the body in Nm in the form [Mxx,Myy,Mzz]
+            modt (float): Mass flow rate of the motor. i.e. 0.1 implies the motor is ejection 0.1 kgs^-1
+        """
         #we update our positon and attitude so that we start from the previous point
         self.posits[self.tIndex,:] = self.posits[self.tIndex-1,:]
         self.angles[self.tIndex,:] = self.angles[self.tIndex-1,:]
@@ -57,27 +87,11 @@ class KinematicSimulation(object):
         
         vdotglobal = np.dot(rotmat,vdotbody)
         vdotglobal[2] += -self.g
-        
-        print('vdotglobal:')
-        
-        print(vdotglobal)
-        
+
         vel0 = self.body.vel*1
         self.body.vel += vdotglobal*self.dt
         
-        print('vel')
-        
-        
-        print(self.body.vel)
-        
-        print('vel0')
-        print(vel0)
-        
         self.posits[self.tIndex,:] += 0.5*(self.body.vel+vel0)*self.dt
-        print('dt is %f'%(self.dt))
-        print('pos')
-        
-        print(self.posits[self.tIndex,:])
         
         #We correct the mass
         self.body.mass -=mdot*0.5*self.dt

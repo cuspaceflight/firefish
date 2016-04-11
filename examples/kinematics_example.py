@@ -10,6 +10,7 @@ from firefish.kinematics import (
     KinematicBody, KinematicSimulation)
 
 class CylinderRocket(KinematicBody):
+    """A rocket that is a cylinder with  evenly distributed mass"""
     def update_moi(self):
         radius = 0.3
         height = 2
@@ -23,6 +24,7 @@ class CylinderRocket(KinematicBody):
 pos = []
         
 def main():
+    """Run through the simulation with a 50s motor burn"""
     initialMass = 100
     initialInertias = [0, 0, 0]
     rocket = CylinderRocket(initialMass,initialInertias)
