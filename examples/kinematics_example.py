@@ -1,8 +1,7 @@
 """
 Example to demonstrate the kinematics classes
 
->>> main()
->>> abs(pos[2]-27670)<1
+>>> abs(main()-27670)<1
 True
 """
 
@@ -45,7 +44,7 @@ def main():
        
         simulation.time_step(forces,torques,mdot)
     
-    pos=simulation.posits[100,:]
+    return simulation.posits[100,2] #z position
     
 if __name__ == '__main__':
     main()

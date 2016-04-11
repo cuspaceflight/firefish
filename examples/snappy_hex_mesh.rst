@@ -6,7 +6,7 @@
 Snappy Hex Mesh Example
 ---------------------
 
-The :download:`snappy_hex_example.py < ../examples/snappy_hex_mesh.py>`
+The :download:`snappy_hex_example.py < ../examples/snappy_hex_example.py>`
 script provides an example of running snappyHexMesh.
 
 In order to be able to run snappyHexMesh we need to set up a control dictionary even though
