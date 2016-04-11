@@ -3,7 +3,7 @@ import pytest
 
 @pytest.fixture
 def kilogram_point_mass():
-    return kine.KinematicBody(1, [0, 0, 0])
+    return kine.KinematicBody(1, [1, 1, 1])
 
 
 def test_kinematics_vert():
