@@ -14,7 +14,7 @@ def test_kinematics_vert():
     sim = kine.KinematicSimulation(kilogram_point_mass(), g, dur, dt)
     while sim.tIndex*dt <= dur:
         sim.time_step(F, [0, 0, 0], 0)
-    zPos = sim.posits[int(dur/dt), 2]
+    zPos = sim.posits[100, 2]
     calcZPos = 0.5*10*dur**2
     distTol = 1
     assert(abs(zPos-calcZPos)<distTol)

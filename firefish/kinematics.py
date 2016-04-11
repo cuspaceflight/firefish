@@ -43,8 +43,8 @@ class KinematicSimulation(object):
         self.body = body
         self.times = np.linspace(0, duration, num=duration/dt + 1)
         # pylint: disable=no-member
-        self.posits = np.zeros([self.times.shape[0], 3], float) #x,y,z position
-        self.angles = np.zeros([self.times.shape[0], 3], float)
+        self.posits = np.zeros([self.times.shape[0], 3]) #x,y,z position
+        self.angles = np.zeros([self.times.shape[0], 3])
         self.dt = dt
         self.tIndex = 1 #means we have t=0 as being on the pad
     def time_step(self, forces, torques, mdot):
