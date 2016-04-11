@@ -30,6 +30,7 @@ rot = np.zeros(3,float)
 for ii, t in enumerate(times):
 	if ii > 0:
 		dt = t - times[ii-1]
+		
 
 		if t <= 50: 
 			Thrust = 2000.0
@@ -78,13 +79,28 @@ for ii, t in enumerate(times):
 	
 		vdotglobal = np.dot(rotmat,vdotbody)
 		vdotglobal[-1] += -gravityacc
-
+		print('vdotlgobal:')
+		print(vdotglobal)
 		# Convert forces from body to global
-
 		# Velocity integration from acceleration
 		vel0 = vel*1 # *1 to avoid copying variable reference
 		vel += vdotglobal*dt
+		
+		print('vel')
+		print(vel)
+		print('vel0')
+		print(vel0)
+		
 		posits[ii,:] += 0.5*(vel + vel0)*dt
+		print('dt is %f' %(dt))
+		
+		
+		print('pos:')
+		print(posits[ii,:])
+		
+		print('t is %f' %(t))
+        
+
 
 plt.figure()
 plt.scatter(times[:],posits[:,0])
@@ -99,6 +115,7 @@ plt.scatter(times[:],posits[:,2])
 plt.xlabel('Time')
 plt.ylabel('z')
 plt.show()
+print('plotting')
 
 
 	
