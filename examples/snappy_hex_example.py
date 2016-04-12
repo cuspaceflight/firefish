@@ -14,10 +14,10 @@ def main(case_dir='snappy'):
     case = create_new_case(case_dir)
     write_control_dict(case)
     #write the base block mesh
-    make_block_mesh(case)
+    make_block_mesh(ca`se)
 
-    rocket = Geometry(GeometryFormat.STL,'example.stl','example',case)
-    rocket.scale(0.5);
+    rocket = Geometry(GeometryFormat.STL,'dart2.stl','dart',case)
+    rocket.scale(0.001);
     rocket.translate([0.5,2,2])
     
     snap = SnappyHexMesh(rocket,4,case)
