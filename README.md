@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/cuspaceflight/firefish.svg?branch=master)](https://travis-ci.org/cuspaceflight/firefish)
 [![Coverage
 Status](https://coveralls.io/repos/cuspaceflight/firefish/badge.svg?branch=master&service=github)](https://coveralls.io/github/cuspaceflight/firefish?branch=master)
+[![Documentation
+Status](http://readthedocs.org/projects/firefish/badge/?version=latest)](http://firefish.readthedocs.org/en/latest/?badge=latest)
 
 CFD simulation software for Martlet 3
 
