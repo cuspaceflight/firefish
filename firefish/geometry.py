@@ -129,11 +129,12 @@ class Geometry(object):
 
 def load_multiple_geometries(geomType, paths, names, case):
     """Loads multiple geometries of the same type and returns as a list
-        Args:
-            geomType (firefish.geometry.GeometryFormat): indicates what type these geometries are
-            paths: list of paths to each geometry file eg. stls/foo.stl
-            names: the list of names of each geometry e.g. body, fin etc.
-            case (firefish.case.Case): the case to place each geometry in
+    
+    Args:
+        geomType (firefish.geometry.GeometryFormat): indicates what type these geometries are
+        paths: list of paths to each geometry file eg. stls/foo.stl
+        names: the list of names of each geometry e.g. body, fin etc.
+        case (firefish.case.Case): the case to place each geometry in
 
     """
     geometries = []
