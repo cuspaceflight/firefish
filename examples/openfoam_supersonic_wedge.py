@@ -11,25 +11,26 @@ True
 
 import os
 from firefish.case import (
-	Case, Dimension, FileName, FileClass
+    Case, Dimension, FileName, FileClass, StandardFluid,
+    write_standard_thermophysical_properties
 )
 
 def main(case_dir='wedge', n_iter=10):
-	#Try to create new case directory
-	case = create_new_case(case_dir)
-	# Add the information needed by blockMesh.
-	write_control_dict(case, n_iter)
-	write_block_mesh_dict(case)
-	#we generate the mes1h
-	case.run_tool('blockMesh')
-	#we prepare the thermophysical and turbulence properties
-	write_thermophysical_properties(case)
-	write_turbulence_properties(case)
-	#we write fvScheme and fvSolution
-	write_fv_schemes(case)
-	write_fv_solution(case)
-	write_initial_conditions(case)
-	case.run_tool('rhoCentralFoam')
+    #Try to create new case directory
+    case = create_new_case(case_dir)
+    # Add the information needed by blockMesh.
+    write_control_dict(case, n_iter)
+    write_block_mesh_dict(case)
+    #we generate the mes1h
+    case.run_tool('blockMesh')
+    #we prepare the thermophysical and turbulence properties
+    write_standard_thermophysical_properties(case, StandardFluid.DIMENSIONLESS_AIR)
+    write_turbulence_properties(case)
+    #we write fvScheme and fvSolution
+    write_fv_schemes(case)
+    write_fv_solution(case)
+    write_initial_conditions(case)
+    case.run_tool('rhoCentralFoam')
 
 def create_new_case(case_dir):
 	"""Creates new case directory"""
@@ -135,21 +136,6 @@ def write_block_mesh_dict(case):
 
 	with case.mutable_data_file(FileName.BLOCK_MESH) as d:
 		d.update(block_mesh_dict)
-
-def write_thermophysical_properties(case):
-	"""Sets the thermdynamic properties of the gas.
-	These are chosen such that at a temperature of 1K the speed of sound is
-	1m/s"""
-	thermo_dict = {
-		'thermoType' : {'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
-						'transport' : 'const', 'thermo'  : 'hConst',
-						'equationOfState' : 'perfectGas', 'specie' : 'specie',
-						'energy' : 'sensibleInternalEnergy'},
-		'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
-					  'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
-					  'transport' : {'mu' : 0, 'Pr' : 1}}}
-	with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
-		d.update(thermo_dict)
 
 def write_turbulence_properties(case):
 	"""Disables the turbulent solver"""

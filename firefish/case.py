@@ -353,6 +353,56 @@ class Case(object):
         """Return path relative to root directory."""
         return os.path.join(self.root_dir_path, path)
 
+class StandardFluid(enum.Enum):
+    """An enumeration of commonly used fluids
+
+    Attributes:
+        AIR: generates the recommended OpenFoam thermophysicalProperties for air.
+            The dictionary produced is taken from the rhoCentralFoam shock tube
+            tutorial
+        DIMENSIONLESS_AIR: generates a normalised gas whith gamma=7/5 and with
+            the property that at 1 temperature unit the speed of sound is 1
+            velocity unit. The dictionary produced is taken from the rhoCentralFoam
+            wedge15Ma5 tutorial
+
+    """
+    AIR = 0
+    DIMENSIONLESS_AIR = 1
+
+def write_standard_thermophysical_properties(case, fluid):
+    """"    Writes a thermophysicalProperties dict in the given case for the
+    specified fluid.
+
+    Args:
+        case (firefish.case.Case): the case in which to write the dict
+        fluid (firefish.case.StandardFluid): the fluid to use
+
+    """
+
+    thermo_dict = None
+
+    if fluid == StandardFluid.AIR:
+        thermo_dict = {
+            'thermoType' : {'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
+                            'transport' : 'const', 'thermo'  : 'hConst',
+                            'equationOfState' : 'perfectGas', 'specie' : 'specie',
+                            'energy' : 'sensibleInternalEnergy'},
+            'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 28.96},
+                         'thermodynamics' : {'Cp' : 1004.5, 'Hf' : 2.544e+06},
+                         'transport' : {'mu' : 0, 'Pr' : 1}}}
+    elif fluid == StandardFluid.DIMENSIONLESS_AIR:
+        thermo_dict = {
+            'thermoType' : {'type' : 'hePsiThermo', 'mixture' : 'pureMixture',
+                            'transport' : 'const', 'thermo'  : 'hConst',
+                            'equationOfState' : 'perfectGas', 'specie' : 'specie',
+                            'energy' : 'sensibleInternalEnergy'},
+            'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
+                         'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
+                         'transport' : {'mu' : 0, 'Pr' : 1}}}
+
+    with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
+        d.update(thermo_dict)
+
 ## PRIVATE CLASSES AND FUNCTIONS
 
 @contextlib.contextmanager

@@ -9,7 +9,8 @@ import pytest
 import firefish.geometry
 from firefish.case import (
     Case, CaseDoesNotExist, Dimension, FileName, FileName, read_data_file,
-    CaseToolRunFailed, CaseAlreadyExists
+    CaseToolRunFailed, CaseAlreadyExists, StandardFluid,
+    write_standard_thermophysical_properties
 )
 
 @pytest.fixture
@@ -104,3 +105,16 @@ def test_add_tri_surface_will_clobber_if_asked(tmpcase, unit_sphere_geometry):
     tmpcase.add_tri_surface('surface', unit_sphere_geometry)
     tmpcase.add_tri_surface('surface', unit_sphere_geometry,
                             clobber_existing=True)
+
+def test_dimensionless_air(tmpcase):
+    """Tests dimensionless air writes to a file"""
+    write_standard_thermophysical_properties(tmpcase, StandardFluid.DIMENSIONLESS_AIR)
+    dict_path = os.path.join(tmpcase.root_dir_path, 'constant', 'thermophysicalProperties')
+    assert os.path.isfile(dict_path)
+
+
+def test_dimensionless_air(tmpcase):
+    """Tests dimensionless air writes to a file"""
+    write_standard_thermophysical_properties(tmpcase, StandardFluid.AIR)
+    dict_path = os.path.join(tmpcase.root_dir_path, 'constant', 'thermophysicalProperties')
+    assert os.path.isfile(dict_path)
