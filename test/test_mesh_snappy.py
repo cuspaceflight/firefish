@@ -18,7 +18,7 @@ def tmpcase(tmpdir):
 def test_snappy_dict(tmpcase,tmpdir,geomdir):
     stl_path = os.path.join(geomdir, 'unit_sphere.stl')
     geometry = geom.Geometry(geom.GeometryFormat.STL,stl_path,'sphere',tmpcase)
-    snap = snappy.SnappyHexMesh(geometry,4,tmpcase)
+    snap = snappy.SnappyHexMesh([geometry],4,tmpcase)
     snap.write_snappy_dict()
     assert os.path.isfile(os.path.join(
         tmpcase.root_dir_path, 'system','snappyHexMeshDict'
