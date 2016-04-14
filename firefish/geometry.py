@@ -109,7 +109,7 @@ class Geometry(object):
 		if self.geomType == GeometryFormat.STL:
 			self.geom = stl_scale(self.geom, factor)
 
-	def extract_features(self):
+	def extract_features(self,file_list):
 		"""Extracts surface features from geometry using the surfaceFeatureExtract tool
 			Args:
 				file_list: list of file names, containing the parts which are to be included in

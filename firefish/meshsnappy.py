@@ -64,80 +64,8 @@ class SnappyHexMesh(object):
 		self.nLayerIter = 50
 		self.mergeTolerance = 1e-6
 
-	def write_snappy_dict(self):
-		"""Writes the SHM dictionary
-
-		.. note::
-			This is called by SnappyHexMesh when it generates the mesh
-		"""
-		snappy_dict = {
-			'castellatedMesh' : self.castellate,
-			'snap' : self.snap,
-			'addLayers' : self.addLayers,
-			'geometry' : {
-				self.geom.filename : {
-					'type' : 'triSurfaceMesh'},
-				},
-			'castellatedMeshControls' : {
-				'maxLocalCells' : self.maxLocalCells,
-				'maxGlobalCells' : self.maxGlobalCells,
-				'minRefinementCells' : self.minRefinementCells,
-				'maxLoadUnbalance' : self.maxLoadUnbalance,
-				'nCellsBetweenLevels' : self.nCellsBetweenLevels,
-				'features' : [{'file' : '"{}.eMesh"'.format(self.geom.name),
-							   'level' : self.surfaceRefinement}],
-				'refinementSurfaces' : {self.geom.filename : {
-					'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}},
-				'resolveFeatureAngle' : self.resolveFeatureAngle,
-				'refinementRegions' : {self.geom.filename :
-									   {'mode' : 'distance',
-										'levels' :([[(self.distanceRefinements[x],\
-													  self.distanceLevels[x])] for x in\
-													range(len(self.distanceRefinements))])}},
-				'locationInMesh' : self.locationToKeep,
-				'allowFreeStandingZoneFaces' : self.allowFreeStandingFaces
-				},
-			'snapControls' :
-			{
-				'nSmoothPatch' : self.nSmoothPatch,
-				'tolerance' : self.snapTolerance,
-				'nRelaxIter' : self.nRelaxIter,
-				'nSolveIter' : self.nSolveIter,
-				'nFeatureSnapIter' : self.nFeatureSnapIter,
-				'implicitFeatureSnap' : self.implicitFeatureSnap,
-				'explicitFeatureSnap' : self.explicitFeatureSnap,
-				'multiRegionFeatureSnap' : self.multiRegionFeatureSnap,
-				},
-			'addLayersControls' :
-			{
-				'relativeSizes' : self.relativeSizes,
-				'layers' : {self.geom.filename : {'nSurfaceLayers' : self.nSurfaceLayers}},
-				'expansionRatio' : self.expansionRatio,
-				'finalLayerThickness' : self.finalLayerThickness,
-				'minThickness' : self.minThickness,
-				'nGrow' : self.nGrow,
-				'featureAngle' : self.featureAngle,
-				'slipFeatureAngle' : self.slipFeatureAngle,
-				'nRelaxIter' : self.nRelaxIter,
-				'nSmoothSurfaceNormals' : self.nSmoothSurfaceNormals,
-				'nSmoothNormals' : self.nSmoothNormals,
-				'nSmoothThickness' : self.nSmoothThickness,
-				'maxFaceThicknessRatio' : self.maxFaceThicknessratio,
-				'maxThicknessToMedialRatio' : self.maxThicknessToMedialRatio,
-				'minMedianAxisAngle' : self.minMedianAxisAngle,
-				'nBufferCellsNoExtrude' : self.nBufferCellsNoExtrude,
-				'nLayerIter' : self.nLayerIter
-				},
-			'meshQualityControls' :
-			{
-				'#include' : '"meshQualityDict"'
-				},
-			'mergeTolerance' : self.mergeTolerance
-			}
-		with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
-			d.update(snappy_dict)
-
-	def write_snappy_dict_multipart(self, part_list):
+	
+	def write_snappy_dict(self, part_list):
 		"""Writes the SHM dictionary
 
 		.. note::
@@ -227,7 +155,7 @@ class SnappyHexMesh(object):
 			d.update(snappy_dict)
 
 
-	def generate_mesh(self):
+	def generate_mesh(self, part_list):
 		"""Generates the mesh
 
 		.. note::
