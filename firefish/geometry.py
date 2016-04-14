@@ -111,25 +111,6 @@ class Geometry(object):
 
 	def extract_features(self):
 		"""Extracts surface features from geometry using the surfaceFeatureExtract tool
-		"""
-		#This is used by mesh generation but could be used elsewhere so is kept in this class
-		if not self.saved:
-			self.case.add_tri_surface(self.name, self.geom)
-
-		surface_extract_dict = {
-			'{}.stl'.format(self.name) : {'extractionMethod' : 'extractFromSurface',
-										  'extractFromSurfaceCoeffs' : {'includedAngle' : 180,
-																		'geometricTestOnly' : True},
-										  'writeObj' : 'yes'}
-		}
-
-		with self.case.mutable_data_file(FileName.SURFACE_FEATURE_EXTRACT) as d:
-			d.update(surface_extract_dict)
-
-		self.case.run_tool('surfaceFeatureExtract')
-
-	def add_features(self, file_list):
-		"""Extracts surface features from geometry using the surfaceFeatureExtract tool
 			Args:
 				file_list: list of file names, containing the parts which are to be included in
 							the surfaceFeatureExtract

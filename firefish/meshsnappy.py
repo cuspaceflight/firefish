@@ -236,13 +236,7 @@ class SnappyHexMesh(object):
 			runs SHM.
 			We assume that an underlying block mesh has already been produced
 		"""
-		self.geom.extract_features()
-		self.geom.meshSettings.write_settings(self.case)
-		self.write_snappy_dict()
-		self.case.run_tool('snappyHexMesh')
-
-	def generate_mesh_multipart(self, part_list):
-		self.geom.add_features(part_list)
+		self.geom.extract_features(part_list)
 		self.geom.meshSettings.write_settings(self.case)
 		self.write_snappy_dict_multipart(part_list)
 		self.case.run_tool('snappyHexMesh')
