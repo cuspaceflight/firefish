@@ -155,7 +155,7 @@ class SnappyHexMesh(object):
             d.update(snappy_dict)
 
 
-    def generate_mesh(self, part_list):
+    def generate_mesh(self):
         """Generates the mesh
 
         .. note::
@@ -164,9 +164,10 @@ class SnappyHexMesh(object):
             runs SHM.
             We assume that an underlying block mesh has already been produced
         """
-        self.geom.extract_features(part_list)
-        self.geom.meshSettings.write_settings(self.case)
-        self.write_snappy_dict_multipart(part_list)
+        for geom in self.geometries:
+            geom.extract_features()
+        self.geometries[0].meshSettings.write_settings(self.case)
+        self.write_snappy_dict()
         self.case.run_tool('snappyHexMesh')
 
     def add_mesh_features(self, file_list):
