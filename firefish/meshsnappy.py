@@ -6,18 +6,18 @@ from firefish.case import FileName
 
 class SnappyHexMesh(object):
     """Encapsulates all the snappyHexMesh settings"""
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, geom, surfaceRefinement, case):
+    # pylint: disable-all
+    def __init__(self, geometries, surfaceRefinement, case):
         """Creates a Snappy Hex Mesh object with default settings and given
         refinement at surface
 
         Args:
-            geom (firefish.geometry.Geometry): representation of geometry to mesh
+            geometries [(firefish.geometry.Geometry)]: list representing the geometry to mesh
             surfaceRefinement: level of refinement at the surface
             case (firefish.case.Case): the case to run SHM from
         """
 
-        self.geom = geom
+        self.geometries = geometries
         self.surfaceRefinement = surfaceRefinement
         self.case = case
         #we set up the default settings for snappy
@@ -32,7 +32,7 @@ class SnappyHexMesh(object):
         self.edgeRefinementLevel = 6
         self.refinementSurfaceMin = 5
         self.refinementSurfaceMax = 6
-        self.resolveFeatureAngle = 30
+        self.resolveFeatureAngle = 5
         self.distanceRefinements = [0.1, 0.2]
         self.distanceLevels = [4, 3]
         self.locationToKeep = [0.001, 0.001, 0.0015]
@@ -49,7 +49,7 @@ class SnappyHexMesh(object):
         self.nSurfaceLayers = 1
         self.expansionRatio = 1
         self.finalLayerThickness = 0.1
-        self.minThickness = 0.1
+        self.minThickness = 0.03
         self.nGrow = 0
         self.featureAngle = 60
         self.slipFeatureAngle = 30
@@ -64,32 +64,49 @@ class SnappyHexMesh(object):
         self.nLayerIter = 50
         self.mergeTolerance = 1e-6
 
+    
     def write_snappy_dict(self):
         """Writes the SHM dictionary
 
         .. note::
             This is called by SnappyHexMesh when it generates the mesh
         """
+        feature_list = []
+        refinement_surface_dict = {}
+        layer_dict = {}
+        geom_dict = {}
+
+        for part in self.geometries:
+            geom = { part.filename : {'type':'triSurfaceMesh', 'name':part.name}}
+            geom_dict.update(geom)
+
+            file_dict = {'file' : '"{}.eMesh"'.format(part.name),
+                        'level' : self.surfaceRefinement}
+            feature_list.append(file_dict)
+
+            refinement_surface = {part.name : {
+                                 'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}}
+            refinement_surface_dict.update(refinement_surface)
+
+            layer = {part.name : {'nSurfaceLayers' : self.nSurfaceLayers}}
+            layer_dict.update(layer)
+
         snappy_dict = {
+
             'castellatedMesh' : self.castellate,
             'snap' : self.snap,
             'addLayers' : self.addLayers,
-            'geometry' : {
-                self.geom.filename : {
-                    'type' : 'triSurfaceMesh'},
-                },
+            'geometry' :geom_dict,
             'castellatedMeshControls' : {
                 'maxLocalCells' : self.maxLocalCells,
                 'maxGlobalCells' : self.maxGlobalCells,
                 'minRefinementCells' : self.minRefinementCells,
                 'maxLoadUnbalance' : self.maxLoadUnbalance,
                 'nCellsBetweenLevels' : self.nCellsBetweenLevels,
-                'features' : [{'file' : '"{}.eMesh"'.format(self.geom.name),
-                               'level' : self.surfaceRefinement}],
-                'refinementSurfaces' : {self.geom.filename : {
-                    'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}},
+                'features' : feature_list,
+                'refinementSurfaces': refinement_surface_dict,
                 'resolveFeatureAngle' : self.resolveFeatureAngle,
-                'refinementRegions' : {self.geom.filename :
+                'refinementRegions' : {self.geometries[0].name :
                                        {'mode' : 'distance',
                                         'levels' :([[(self.distanceRefinements[x],\
                                                       self.distanceLevels[x])] for x in\
@@ -111,11 +128,11 @@ class SnappyHexMesh(object):
             'addLayersControls' :
             {
                 'relativeSizes' : self.relativeSizes,
-                'layers' : {self.geom.filename : {'nSurfaceLayers' : self.nSurfaceLayers}},
                 'expansionRatio' : self.expansionRatio,
                 'finalLayerThickness' : self.finalLayerThickness,
                 'minThickness' : self.minThickness,
                 'nGrow' : self.nGrow,
+                'layers': layer_dict,
                 'featureAngle' : self.featureAngle,
                 'slipFeatureAngle' : self.slipFeatureAngle,
                 'nRelaxIter' : self.nRelaxIter,
@@ -137,6 +154,7 @@ class SnappyHexMesh(object):
         with self.case.mutable_data_file(FileName.SNAPPY_HEX_MESH) as d:
             d.update(snappy_dict)
 
+
     def generate_mesh(self):
         """Generates the mesh
 
@@ -146,9 +164,12 @@ class SnappyHexMesh(object):
             runs SHM.
             We assume that an underlying block mesh has already been produced
         """
-        self.geom.extract_features()
-        self.geom.meshSettings.write_settings(self.case)
+        for geom in self.geometries:
+            geom.extract_features()
+        self.geometries[0].meshSettings.write_settings(self.case)
         self.write_snappy_dict()
         self.case.run_tool('snappyHexMesh')
 
-
+    def add_mesh_features(self, file_list):
+        """test function which runs add_features in order to write the surfaceFeatureExtractDict"""
+        self.geom.add_features(file_list)

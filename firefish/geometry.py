@@ -19,7 +19,7 @@ class GeometryFormat(enum.Enum):
 
 class MeshQualitySettings(object):
     """Controls the mesh quality settings associated with the gometry"""
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable-all
     def __init__(self):
         """Initiates itself with a set of default mesh quality settings"""
         self.maxNonOrtho = 65
@@ -63,7 +63,7 @@ class MeshQualitySettings(object):
 class Geometry(object):
     """This class encapsulates the geometry functionality"""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable-all
     def __init__(self, geomType, path, name, case):
         """Initialises settings and loads the geometry into memory
 
@@ -83,7 +83,6 @@ class Geometry(object):
             self.filename = '{}.stl'.format(self.name)
             self.geom = stl_load(path)
 
-
         self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
 
     def translate(self, delta):
@@ -95,6 +94,12 @@ class Geometry(object):
         if self.geomType == GeometryFormat.STL:
             self.geom = stl_translate(self.geom, delta)
 
+    def recentre(self):
+        """Recentres the geometry"""
+
+        if self.geomType == GeometryFormat.STL:
+            self.geom = stl_recentre(self.geom)
+        
     def scale(self, factor):
         """Scales geometry by factor
 
@@ -121,6 +126,23 @@ class Geometry(object):
             d.update(surface_extract_dict)
 
         self.case.run_tool('surfaceFeatureExtract')
+
+def load_multiple_geometries(geomType, paths, names, case):
+    """Loads multiple geometries of the same type and returns as a list
+    
+    Args:
+        geomType (firefish.geometry.GeometryFormat): indicates what type these geometries are
+        paths: list of paths to each geometry file eg. stls/foo.stl
+        names: the list of names of each geometry e.g. body, fin etc.
+        case (firefish.case.Case): the case to place each geometry in
+
+    """
+    geometries = []
+    for i in range(len(names)):
+        geometries.append(Geometry(geomType,paths[i],names[i],case))
+
+    return geometries
+
 
 def _erase_attr(o, attr):
     """Delete the attribute *attr* from *o* but only if present."""

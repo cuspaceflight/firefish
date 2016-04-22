@@ -16,11 +16,11 @@ def main(case_dir='snappy'):
     #write the base block mesh
     make_block_mesh(case)
 
-    rocket = Geometry(GeometryFormat.STL,'example.stl','example',case)
+    rocket = Geometry(GeometryFormat.STL,'STLS/example.stl','example',case)
     rocket.scale(0.5);
     rocket.translate([0.5,2,2])
     
-    snap = SnappyHexMesh(rocket,4,case)
+    snap = SnappyHexMesh([rocket],4,case)
     snap.snap=True
     snap.snapTolerance = 8;
     snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
