@@ -27,14 +27,19 @@ def main(output='flutter-velocity-example.pdf'):
     ps, ts, ss = model_atmosphere(zs)
     rhos = (ps/1000) / (0.2869 * (ts + 273.1))
     vs_t = flutter_velocity_transonic(ps, ss, 20, 10, 10, 0.2)
-    vs_s = flutter_velocity_supersonic(rhos, 26796, 7025, 0.0527, 0.06, 0.0518, 0.0058, 4.3)
+    vs_s1 = flutter_velocity_supersonic(rhos, 26796, 7025, 0.0527, 0.06, 0.0518, 0.0058, 4.3)
+    vs_s2 = flutter_velocity_supersonic(rhos, 26796, 7025, 0.0527, 0.06, 0.0518, 0.0058, 3)
+    vs_s3 = flutter_velocity_supersonic(rhos, 26796, 7025, 0.0527, 0.06, 0.0518, 0.0058, 2)
 
     plt.figure()
     #plt.plot(zs * 1e-3, vs_t, 'r', label="transonic flutter velocity")
-    plt.plot(zs*1e-3, vs_s, 'g', label="supersonic flutter velocity, Mach 4.3")
+    plt.plot(zs*1e-3, vs_s1/343.2, 'g', label="Mach 4.3")
+    plt.plot(zs*1e-3, vs_s2/343.2, 'r', label="Mach 3")
+    plt.plot(zs*1e-3, vs_s3/343.2, 'b', label="Mach 2")
+
     plt.title('Flutter velocity vs altitude')
     plt.xlabel('Altitude [km]')
-    plt.ylabel('Flutter velocity [m/s]')
+    plt.ylabel('Flutter Velocity [Mach]')
     plt.legend()
     plt.savefig(output, format='PDF')
 
