@@ -92,7 +92,7 @@ def model_atmosphere(altitudes):
 
 def flutter_velocity_transonic(pressures, speeds_of_sound,
                                root_chord, tip_chord, semi_span, thickness,
-                               shear_modulus=2.62e9):
+                               shear_modulus=26.2e9):
     """Calculate transonic flutter velocities for a given fin design.
     The equation is valid if the rocket is travelling at < M2.5 at the
     given altitude.
