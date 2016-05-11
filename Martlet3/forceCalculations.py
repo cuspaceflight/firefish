@@ -11,7 +11,10 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-part_list = ['dart', 'core', 'fin1', 'fin2', 'fin3', 'fin4']    
+#part_list = ['dart']
+#path_list = ['STLS/dart_whole.stl']    
+
+part_list = ['dart', 'core', 'fin1', 'fin2', 'fin3', 'fin4']
 path_list = ['STLS/dart.stl', 'STLS/core.stl', 'STLS/fin1.stl', 'STLS/fin2.stl', 'STLS/fin3.stl', 'STLS/fin4.stl',] 
 streamVelocity = 2
 def main(case_dir='joinSTL', runRhoCentral = False):
@@ -24,14 +27,14 @@ def main(case_dir='joinSTL', runRhoCentral = False):
 	snap = SnappyHexMesh(parts,4,case)
 	###############un-comment out the code snippet below if you want to apply extra refinement#########
 	snap.refinementSurfaceMin =7
-	snap.maxGlobalCells=20000000
+	snap.maxGlobalCells=100000000
 	snap.refinementSurfaceMax =8
 	snap.distanceLevels = [7,6,4,2]
-	snap.distanceRefinements = [0.01,0.02,0.06,0.2]
+	snap.distanceRefinements = [0.005,0.01,0.03,0.1]
 	snap.snap=True
 	snap.snapTolerance = 8
-	snap.edgeRefinementLevel = 8
-	##############un-comment out the code snippet below if you want to apply extra refinement#########
+	snap.edgeRefinementLevel = 7
+	#############un-comment out the code snippet below if you want to apply extra refinement#########
 	snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
 	snap.addLayers=False
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
@@ -93,6 +96,7 @@ def write_control_dict(case):
 		#function objects for calculating drag coefficients with the simulation
 		#forces given in body co-ordinates
 		'functions': {
+			#dart
 			'forces1':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
@@ -101,10 +105,20 @@ def write_control_dict(case):
 				'rhoInf':4.7,
 				'CofR':[0, 0, 0],
 			},
+			#core
 			'forces2':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
 				'patches':part_list[1:2],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			#fin
+			'forces3':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[2:3],
 				'rhoName': 'rhoInf',
 				'rhoInf':4.7,
 				'CofR':[0, 0, 0],
@@ -139,19 +153,19 @@ def make_block_mesh(case):
 		'boundary': [
 			('inlet', {
 				'type': 'inlet',
-				'faces': [ [0, 3, 4, 7] ],
+				'faces': [ [7, 6, 3, 2] ],
 			}),
 			('outlet', {
 				'type': 'outlet',
-				'faces': [ [2, 6, 5, 1] ],
+				'faces': [ [4, 5, 0, 1] ],
 			}),
 			('fixedWalls', {
 				'type': 'wall',
 				'faces': [
-					[4, 7, 6, 5],
-					[7, 6, 3, 2],
 					[0, 3, 2, 1],
-					[4, 5, 0, 1],
+					[4, 7, 5, 6],
+					[0, 3, 4, 7],
+					[2, 6, 5, 1],
 				],
 			})
 		],
