@@ -13,16 +13,17 @@ from subprocess import call
 
 ###simulation parameters#####
 part_list = ['dart+booster']
-path_list = ['STLS/single_stage_whole.stl'] 
+path_list = ['STLS/single_stage_simplified.stl'] 
 
-timeStep = 0.00001
+timeStep = 1e-5
 endTime = 0.15
+interval = 100*timeStep
 
 streamVelocity = 1
-angle_of_attack = math.radians(10)
+angle_of_attack = math.radians(3)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
-#### simulation parameters #######
+#####simulation parameters#######
 
 def main(case_dir='joinSTL', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
@@ -50,22 +51,23 @@ def main(case_dir='joinSTL', runRhoCentral = False, parallel = True):
 	write_thermophysical_properties(case)
 	write_turbulence_properties(case)
 	write_initial_conditions(case)
+	write_decompose_settings(case)
 	snap.generate_mesh()
 	getTrueMesh(case)
-	
 	if runRhoCentral:
 		if parallel:
 			case.run_tool('mpirun', '-np 4 rhoCentralFoam -parallel')
   		else:
+  			case.run_tool('decomposePar')
   			case.run_tool('rhoCentralFoam')
 
 def getTrueMesh(case):
 	#the proper mesh is in the final time directory, delete the one in constant
 	os.chdir(case.root_dir_path)
 	call (["rm", "-r", "constant/polyMesh"])
-	call (["mv", "0.002/polyMesh", "constant/"])
-	call (["rm", "-r", "0.001/"])
-	call (["rm", "-r", "0.002/"])
+	call (["mv", "{0}/polyMesh".format(2*timeStep), "constant/"])
+	call (["rm", "-r", "{0}/".format(timeStep)])
+	call (["rm", "-r", "{0}".format(2*timeStep)])
 	os.chdir("../")
 
 def create_new_case(case_dir):
@@ -92,7 +94,7 @@ def write_control_dict(case):
 		'endTime': endTime,
 		'deltaT': timeStep,
 		'writeControl': 'runTime',
-		'writeInterval': 1,
+		'writeInterval': interval,
 		'purgeWrite': 0,
 		'writeFormat': 'ascii',
 		'writePrecision': 6,
