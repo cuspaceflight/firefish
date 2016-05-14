@@ -63,7 +63,7 @@ class SnappyHexMesh(object):
         self.nBufferCellsNoExtrude = 0
         self.nLayerIter = 50
         self.mergeTolerance = 1e-6
-
+        self.debug = 0
     
     def write_snappy_dict(self):
         """Writes the SHM dictionary
@@ -94,7 +94,7 @@ class SnappyHexMesh(object):
             layer_dict.update(layer)
 
         snappy_dict = {
-
+            'debug': self.debug,
             'castellatedMesh' : self.castellate,
             'snap' : self.snap,
             'addLayers' : self.addLayers,
