@@ -2,7 +2,7 @@
 Script to calculate the forces on: dart, core, and one of the fins (symmetrical given neutral angle
 	of attack)
 """
-import os
+import os, math
 
 from firefish.case import (
 	Case, FileName, FileClass, Dimension)
@@ -11,12 +11,13 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-#part_list = ['dart']
-#path_list = ['STLS/dart_whole.stl']    
-
 part_list = ['dart', 'core', 'fin1', 'fin2', 'fin3', 'fin4']
 path_list = ['STLS/dart.stl', 'STLS/core.stl', 'STLS/fin1.stl', 'STLS/fin2.stl', 'STLS/fin3.stl', 'STLS/fin4.stl',] 
-streamVelocity = 2
+streamVelocity = 1
+angle_of_attack = math.radians(10)
+vy = streamVelocity * math.cos(angle_of_attack)
+vx = streamVelocity * math.sin(angle_of_attack)
+
 def main(case_dir='joinSTL', runRhoCentral = False):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
@@ -29,14 +30,14 @@ def main(case_dir='joinSTL', runRhoCentral = False):
 	snap.refinementSurfaceMin =7
 	snap.maxGlobalCells=100000000
 	snap.refinementSurfaceMax =8
-	snap.distanceLevels = [7,6,4,2]
+	snap.distanceLevels = [6,5,4,2]
 	snap.distanceRefinements = [0.005,0.01,0.03,0.1]
 	snap.snap=True
 	snap.snapTolerance = 8
 	snap.edgeRefinementLevel = 7
 	#############un-comment out the code snippet below if you want to apply extra refinement#########
 	snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
-	snap.addLayers=False
+	snap.addLayers=True
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
 	write_fv_schemes(case)
 	write_fv_solution(case)
@@ -79,8 +80,8 @@ def write_control_dict(case):
 		'startFrom': 'startTime',
 		'startTime': 0,
 		'stopAt': 'endTime',
-		'endTime': 10,
-		'deltaT': 0.001,
+		'endTime': 5,
+		'deltaT': 0.000015,
 		'writeControl': 'runTime',
 		'writeInterval': 1,
 		'purgeWrite': 0,
@@ -96,7 +97,7 @@ def write_control_dict(case):
 		#function objects for calculating drag coefficients with the simulation
 		#forces given in body co-ordinates
 		'functions': {
-			#dart
+			#whole
 			'forces1':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
@@ -105,24 +106,24 @@ def write_control_dict(case):
 				'rhoInf':4.7,
 				'CofR':[0, 0, 0],
 			},
-			#core
-			'forces2':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[1:2],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			#fin
-			'forces3':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[2:3],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
+			##core
+			#'forces2':{
+			#	'type': 'forces',
+			#	'functionObjectLibs' : ['"libforces.so"'],
+			#	'patches':part_list[1:2],
+			#	'rhoName': 'rhoInf',
+			#	'rhoInf':4.7,
+			#	'CofR':[0, 0, 0],
+			#},
+			##fin
+			#'forces3':{
+			#	'type': 'forces',
+			#	'functionObjectLibs' : ['"libforces.so"'],
+			#	'patches':part_list[2:3],
+			#	'rhoName': 'rhoInf',
+			#	'rhoInf':4.7,
+			#	'CofR':[0, 0, 0],
+			#},
 		}
 	}
 
@@ -134,8 +135,8 @@ def make_block_mesh(case):
 	block_mesh_dict = {
 
 		'vertices': [
-			[-3, -1, -3], [3, -1, -3], [3, 6, -3], [-3, 6, -3],
-			[-3, -1, 3], [3, -1, 3], [3, 6, 3], [-3, 6, 3],
+			[-3, -1.5, -3], [3.25, -1.5, -3], [3.25, 3.5, -3], [-3, 3.5, -3],
+			[-3, -1.5, 3.25], [3.25, -1.5, 3.25], [3.25, 3.5, 3.25], [-3, 3.5, 3.25],
 
 		],
 
@@ -230,6 +231,19 @@ def write_turbulence_properties(case):
 	with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
 		d.update(turbulence_dict)
 
+def write_decompose_settings(case):
+	"""writes settings for splitting the task into different processors"""
+	#number of domains should equal number of computers
+	 decomposepar_dict = {
+	 	'startTime': 0,
+	 	'method': 'scotch',
+	 	'distributed' : 'no',
+	 	'roots' : [],
+	 }
+
+	 with case.mutable_data_file(FileName.DECOMPOSE) as d:
+		d.update(decomposepar_dict)
+
 def write_initial_conditions(case):
 	"""Sets the initial conditions"""
 	# Create the p initial conditions
@@ -262,7 +276,7 @@ def write_initial_conditions(case):
 		partVelocities.update(partDict)
 	boundaryDict = {
 		'inlet' : {'type' : 'fixedValue',
-				   'value' : ('uniform', [0, -streamVelocity, 0])},
+				   'value' : ('uniform', [-vx, -vy, 0])},
 		'outlet': {
 			'type' : 'zeroGradient'
 		},
@@ -274,7 +288,7 @@ def write_initial_conditions(case):
 	with U_file as U:
 		U.update({
 			'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
-			'internalField': ('uniform', [0, -streamVelocity, 0]),
+			'internalField': ('uniform', [-vx, -vy, 0]),
 			'boundaryField': boundaryDict
 		})
 	#write T boundary conditions
