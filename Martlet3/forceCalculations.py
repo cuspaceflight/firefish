@@ -11,14 +11,20 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-part_list = ['dart', 'core', 'fin1', 'fin2', 'fin3', 'fin4']
-path_list = ['STLS/dart.stl', 'STLS/core.stl', 'STLS/fin1.stl', 'STLS/fin2.stl', 'STLS/fin3.stl', 'STLS/fin4.stl',] 
+###simulation parameters#####
+part_list = ['dart+booster']
+path_list = ['STLS/single_stage_whole.stl'] 
+
+timeStep = 0.00001
+endTime = 0.15
+
 streamVelocity = 1
 angle_of_attack = math.radians(10)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
+#### simulation parameters #######
 
-def main(case_dir='joinSTL', runRhoCentral = False):
+def main(case_dir='joinSTL', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -46,9 +52,13 @@ def main(case_dir='joinSTL', runRhoCentral = False):
 	write_initial_conditions(case)
 	snap.generate_mesh()
 	getTrueMesh(case)
+	
 	if runRhoCentral:
-		case.run_tool('rhoCentralFoam')
-  
+		if parallel:
+			case.run_tool('mpirun', '-np 4 rhoCentralFoam -parallel')
+  		else:
+  			case.run_tool('rhoCentralFoam')
+
 def getTrueMesh(case):
 	#the proper mesh is in the final time directory, delete the one in constant
 	os.chdir(case.root_dir_path)
@@ -62,10 +72,9 @@ def create_new_case(case_dir):
 	"""Creates new case directory"""
 	# Check that the specified case directory does not already exist
 	if os.path.exists(case_dir):
-		call(["rm", "-r", "snappy"])
-		#raise RuntimeError(    
-		#    'Refusing to write to existing path: {}'.format(case_dir)
-		#)
+		raise RuntimeError(    
+			'Refusing to write to existing path: {}'.format(case_dir)
+		)
 
 	# Create the case
 	return Case(case_dir)
@@ -80,8 +89,8 @@ def write_control_dict(case):
 		'startFrom': 'startTime',
 		'startTime': 0,
 		'stopAt': 'endTime',
-		'endTime': 5,
-		'deltaT': 0.000015,
+		'endTime': endTime,
+		'deltaT': timeStep,
 		'writeControl': 'runTime',
 		'writeInterval': 1,
 		'purgeWrite': 0,
@@ -234,14 +243,14 @@ def write_turbulence_properties(case):
 def write_decompose_settings(case):
 	"""writes settings for splitting the task into different processors"""
 	#number of domains should equal number of computers
-	 decomposepar_dict = {
-	 	'startTime': 0,
-	 	'method': 'scotch',
-	 	'distributed' : 'no',
-	 	'roots' : [],
-	 }
+	decomposepar_dict = {
+		'startTime': 0,
+		'method': 'scotch',
+		'distributed' : 'no',
+		'roots' : [],
+	}
 
-	 with case.mutable_data_file(FileName.DECOMPOSE) as d:
+	with case.mutable_data_file(FileName.DECOMPOSE) as d:
 		d.update(decomposepar_dict)
 
 def write_initial_conditions(case):
