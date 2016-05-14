@@ -51,6 +51,9 @@ class FileName(enum.Enum):
     #: controlDict
     CONTROL = _sys_path('controlDict')
 
+    #: decomposeParDict
+    DECOMPOSE = _sys_path('decomposeParDict')
+
     #: blockMeshDict
     BLOCK_MESH = _sys_path('blockMeshDict')
 
