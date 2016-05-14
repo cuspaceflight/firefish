@@ -246,7 +246,7 @@ def write_decompose_settings(case):
 	"""writes settings for splitting the task into different processors"""
 	#number of domains should equal number of computers
 	decomposepar_dict = {
-		'startTime': 0,
+		'numberOfSubdomains': 4,
 		'method': 'scotch',
 		'distributed' : 'no',
 		'roots' : [],
