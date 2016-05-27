@@ -13,19 +13,19 @@ from subprocess import call
 
 ###simulation parameters#####
 part_list = ['dart+booster']
-path_list = ['STLS/single_stage_simplified.stl'] 
+path_list = ['STLS/whole.stl'] 
 
 timeStep = 1e-5
 endTime = 0.15
 interval = 100*timeStep
 
-streamVelocity = 1
+streamVelocity = 1.1
 angle_of_attack = math.radians(3)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
 #####simulation parameters#######
 
-def main(case_dir='joinSTL', runRhoCentral = False, parallel = True):
+def main(case_dir='core_dart_Stability', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -37,14 +37,14 @@ def main(case_dir='joinSTL', runRhoCentral = False, parallel = True):
 	snap.refinementSurfaceMin =7
 	snap.maxGlobalCells=100000000
 	snap.refinementSurfaceMax =8
-	snap.distanceLevels = [6,5,4,2]
-	snap.distanceRefinements = [0.005,0.01,0.03,0.1]
+	snap.distanceLevels = [7,6,4,2]
+	snap.distanceRefinements = [0.005,0.010,0.02,0.2]
 	snap.snap=True
 	snap.snapTolerance = 8
 	snap.edgeRefinementLevel = 7
 	#############un-comment out the code snippet below if you want to apply extra refinement#########
 	snap.locationToKeep = [0.0012,0.124,0.19] #odd numbers to ensure not on face
-	snap.addLayers=True
+	snap.addLayers=False
 	#we need to write fvSchemes and fvSolution to be able to use paraForm and run snappy?
 	write_fv_schemes(case)
 	write_fv_solution(case)
@@ -146,8 +146,8 @@ def make_block_mesh(case):
 	block_mesh_dict = {
 
 		'vertices': [
-			[-3, -1.5, -3], [3.25, -1.5, -3], [3.25, 3.5, -3], [-3, 3.5, -3],
-			[-3, -1.5, 3.25], [3.25, -1.5, 3.25], [3.25, 3.5, 3.25], [-3, 3.5, 3.25],
+			[-5, -3.5, -4.5], [4.25, -3.5, -4.5], [4.25, 6.5, -4.5], [-5, 6.5, -4.5],
+			[-5, -3.5, 4.75], [4.25, -3.5, 4.75], [4.25, 6.5, 4.75], [-5, 6.5, 4.75],
 
 		],
 
@@ -209,10 +209,10 @@ def write_fv_schemes(case):
 	"""Sets fv_schemes"""
 	fv_schemes = {
 		'ddtSchemes'  : {'default' : 'Euler'},
-		'gradSchemes' : {'default' : 'Gauss linear'},
-		'divSchemes'  : {'default' : 'none', 'div(tauMC)' : 'Gauss linear'},
+		'gradSchemes' : {'default' : 'leastSquares'},
+		'divSchemes'  : {'default' : 'Gauss skewCorrected', 'div(tauMC)' : 'Gauss linear'},
 		'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
-		'interpolationSchemes' : {'default' : 'linear',
+		'interpolationSchemes' : {'default' : 'linear skewCorrected',
 								  'reconstruct(rho)' : 'vanLeer',
 								  'reconstruct(U)' : 'vanLeerV',
 								  'reconstruct(T)': 'vanLeer'},
