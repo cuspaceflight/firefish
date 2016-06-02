@@ -19,6 +19,8 @@ timeStep = 1e-7
 endTime = 0.10
 interval = 10000*timeStep
 
+processors = 4
+
 streamVelocity = 1.1
 angle_of_attack = math.radians(0)
 vy = streamVelocity * math.cos(angle_of_attack)
@@ -51,9 +53,9 @@ def main(case_dir='dartTest', runRhoCentral = False, parallel = True):
 	write_thermophysical_properties(case)
 	write_turbulence_properties(case)
 	write_initial_conditions(case)
-	write_decompose_settings(case)
-	snap.generate_mesh()
-	getTrueMesh(case)
+	write_decompose_settings(case, processors)
+	#snap.generate_mesh()
+	#getTrueMesh(case)
 	if runRhoCentral:
 		if parallel:
   			case.run_tool('decomposePar')
@@ -242,11 +244,11 @@ def write_turbulence_properties(case):
 	with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
 		d.update(turbulence_dict)
 
-def write_decompose_settings(case):
+def write_decompose_settings(case, processors):
 	"""writes settings for splitting the task into different processors"""
 	#number of domains should equal number of computers
 	decomposepar_dict = {
-		'numberOfSubdomains': 4,
+		'numberOfSubdomains': processors,
 		'method': 'scotch',
 		'distributed' : 'no',
 		'roots' : [],
