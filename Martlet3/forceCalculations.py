@@ -11,23 +11,31 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
+#02_06_16
+##plan for determining the number of forces
+#the write control dict function is called with a list where the user 
+#gives the components that they want to have the forces calculated for
+#for each member of this list, the function finds the index of
+#the component in part_list, and then writes a member of the dictionary
+#with this index (and index + 1).
+##increase temperature so that there is less of a chance of negative temp when
+#viscosity is added?
+
 ###simulation parameters#####
-part_list = ['dart']
-path_list = ['STLS/dart.stl'] 
+part_list = ['dart+core']
+path_list = ['STLS/whole.stl'] 
 
 timeStep = 1e-7
 endTime = 0.10
 interval = 10000*timeStep
-
 processors = 4
-
 streamVelocity = 1.1
 angle_of_attack = math.radians(0)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
 #####simulation parameters#######
 
-def main(case_dir='dartTest', runRhoCentral = False, parallel = True):
+def main(case_dir='dartCoreTest', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -53,9 +61,9 @@ def main(case_dir='dartTest', runRhoCentral = False, parallel = True):
 	write_thermophysical_properties(case)
 	write_turbulence_properties(case)
 	write_initial_conditions(case)
-	write_decompose_settings(case, processors)
-	#snap.generate_mesh()
-	#getTrueMesh(case)
+	write_decompose_settings(case, processors, "simple")
+	snap.generate_mesh()
+	getTrueMesh(case)
 	if runRhoCentral:
 		if parallel:
   			case.run_tool('decomposePar')
@@ -90,7 +98,7 @@ def write_control_dict(case):
 	# Control dict from tutorial
 	control_dict = {
 		'application': 'rhoCentralFoam',
-		'startFrom': 'startTime',
+		'startFrom': 'latestTime',
 		'startTime': 0,
 		'stopAt': 'endTime',
 		'endTime': endTime,
@@ -244,15 +252,23 @@ def write_turbulence_properties(case):
 	with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
 		d.update(turbulence_dict)
 
-def write_decompose_settings(case, processors):
+def write_decompose_settings(case, processors, scheme):
 	"""writes settings for splitting the task into different processors"""
 	#number of domains should equal number of computers
 	decomposepar_dict = {
 		'numberOfSubdomains': processors,
-		'method': 'scotch',
 		'distributed' : 'no',
 		'roots' : [],
 	}
+
+	if scheme == "scotch":	
+		decomposepar_dict.update({'method': 'scotch'})
+	if scheme == "simple":
+		decomposepar_dict.update({'method' : 'simple'})
+		simpleCoeffs = {
+			'simpleCoeffs' : {'n' : "(2 1 2)", 'delta' : 0.001}
+		}
+		decomposepar_dict.update(simpleCoeffs)
 
 	with case.mutable_data_file(FileName.DECOMPOSE) as d:
 		d.update(decomposepar_dict)
