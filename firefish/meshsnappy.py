@@ -168,6 +168,7 @@ class SnappyHexMesh(object):
         """
         for geom in self.geometries:
             geom.extract_features()
+            geom.recentre()
         self.geometries[0].meshSettings.write_settings(self.case)
         self.write_snappy_dict()
         self.case.run_tool('snappyHexMesh')
