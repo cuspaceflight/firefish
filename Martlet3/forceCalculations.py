@@ -12,20 +12,20 @@ from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
 ###simulation parameters#####
-part_list = ['dart+booster']
-path_list = ['STLS/whole.stl'] 
+part_list = ['dart']
+path_list = ['STLS/dart.stl'] 
 
-timeStep = 1e-5
-endTime = 0.15
-interval = 100*timeStep
+timeStep = 1e-7
+endTime = 0.10
+interval = 10000*timeStep
 
 streamVelocity = 1.1
-angle_of_attack = math.radians(3)
+angle_of_attack = math.radians(0)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
 #####simulation parameters#######
 
-def main(case_dir='core_dart_Stability', runRhoCentral = False, parallel = True):
+def main(case_dir='dartTest', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -38,7 +38,7 @@ def main(case_dir='core_dart_Stability', runRhoCentral = False, parallel = True)
 	snap.maxGlobalCells=100000000
 	snap.refinementSurfaceMax =8
 	snap.distanceLevels = [7,6,4,2]
-	snap.distanceRefinements = [0.005,0.010,0.02,0.2]
+	snap.distanceRefinements = [0.010,0.020,0.04,0.5]
 	snap.snap=True
 	snap.snapTolerance = 8
 	snap.edgeRefinementLevel = 7
@@ -56,9 +56,9 @@ def main(case_dir='core_dart_Stability', runRhoCentral = False, parallel = True)
 	getTrueMesh(case)
 	if runRhoCentral:
 		if parallel:
+  			case.run_tool('decomposePar')
 			case.run_tool('mpirun', '-np 4 rhoCentralFoam -parallel')
   		else:
-  			case.run_tool('decomposePar')
   			case.run_tool('rhoCentralFoam')
 
 def getTrueMesh(case):
@@ -118,23 +118,23 @@ def write_control_dict(case):
 				'CofR':[0, 0, 0],
 			},
 			##core
-			#'forces2':{
-			#	'type': 'forces',
-			#	'functionObjectLibs' : ['"libforces.so"'],
-			#	'patches':part_list[1:2],
-			#	'rhoName': 'rhoInf',
-			#	'rhoInf':4.7,
-			#	'CofR':[0, 0, 0],
-			#},
-			##fin
-			#'forces3':{
-			#	'type': 'forces',
-			#	'functionObjectLibs' : ['"libforces.so"'],
-			#	'patches':part_list[2:3],
-			#	'rhoName': 'rhoInf',
-			#	'rhoInf':4.7,
-			#	'CofR':[0, 0, 0],
-			#},
+			'forces2':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[1:2],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			#fin
+			'forces3':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[3:4],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
 		}
 	}
 
@@ -146,8 +146,8 @@ def make_block_mesh(case):
 	block_mesh_dict = {
 
 		'vertices': [
-			[-5, -3.5, -4.5], [4.25, -3.5, -4.5], [4.25, 6.5, -4.5], [-5, 6.5, -4.5],
-			[-5, -3.5, 4.75], [4.25, -3.5, 4.75], [4.25, 6.5, 4.75], [-5, 6.5, 4.75],
+			[-4.858, -3.5, -4.859], [5.142, -3.5, -4.859], [5.142, 6.5, -4.859], [-4.858, 6.5, -4.859],
+			[-4.858, -3.5, 5.141], [5.142, -3.5, 5.141], [5.142, 6.5, 5.141], [-4.858, 6.5, 5.141],
 
 		],
 
