@@ -23,7 +23,7 @@ class SnappyHexMesh(object):
         #we set up the default settings for snappy
         self.castellate = True
         self.snap = True
-        self.addLayers = True
+        self.addLayers = False
         self.maxLocalCells = 1000000
         self.maxGlobalCells = 200000
         self.minRefinementCells = 200
@@ -32,7 +32,7 @@ class SnappyHexMesh(object):
         self.edgeRefinementLevel = 6
         self.refinementSurfaceMin = 5
         self.refinementSurfaceMax = 6
-        self.resolveFeatureAngle = 5
+        self.resolveFeatureAngle = 100
         self.distanceRefinements = [0.1, 0.2]
         self.distanceLevels = [4, 3]
         self.locationToKeep = [0.001, 0.001, 0.0015]
@@ -63,7 +63,7 @@ class SnappyHexMesh(object):
         self.nBufferCellsNoExtrude = 0
         self.nLayerIter = 50
         self.mergeTolerance = 1e-6
-
+        self.debug = 0
     
     def write_snappy_dict(self):
         """Writes the SHM dictionary
@@ -80,10 +80,12 @@ class SnappyHexMesh(object):
             geom = { part.filename : {'type':'triSurfaceMesh', 'name':part.name}}
             geom_dict.update(geom)
 
+            """edge refinement for where the snapped mesh intersects with the block mesh""" 
             file_dict = {'file' : '"{}.eMesh"'.format(part.name),
-                        'level' : self.surfaceRefinement}
+                        'level' : self.edgeRefinementLevel}
             feature_list.append(file_dict)
-
+            
+            """surface refinement levels""" 
             refinement_surface = {part.name : {
                                  'level' : [self.refinementSurfaceMin, self.refinementSurfaceMax]}}
             refinement_surface_dict.update(refinement_surface)
@@ -92,7 +94,7 @@ class SnappyHexMesh(object):
             layer_dict.update(layer)
 
         snappy_dict = {
-
+            'debug': self.debug,
             'castellatedMesh' : self.castellate,
             'snap' : self.snap,
             'addLayers' : self.addLayers,
@@ -166,6 +168,7 @@ class SnappyHexMesh(object):
         """
         for geom in self.geometries:
             geom.extract_features()
+            geom.recentre()
         self.geometries[0].meshSettings.write_settings(self.case)
         self.write_snappy_dict()
         self.case.run_tool('snappyHexMesh')
