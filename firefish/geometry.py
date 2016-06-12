@@ -12,6 +12,7 @@ import stl.mesh as mesh
 import enum
 
 from firefish.case import FileName
+from subprocess import call
 
 class GeometryFormat(enum.Enum):
     """An enumeration of different geometry formats"""
@@ -69,7 +70,7 @@ class Geometry(object):
 
         Args:
             geomType (firefish.geometry.GeometryFormat): indicates what type of geometry this is
-            path: path to te geometry file
+            path: path to the geometry file
             name: The name of the geometry (NOT the filename)
             case (firefish.case.Case): The case to place the geometry in
         """
@@ -84,6 +85,13 @@ class Geometry(object):
             self.geom = stl_load(path)
 
         self.meshSettings = MeshQualitySettings() # we create a default set of mesh quality settings
+
+    def save(self, path):
+        """copies the stl from source directory into path
+
+            Args: path: the path to copy the stl file into
+        """
+        call (["cp", self.geomPath, path]) 
 
     def translate(self, delta):
         """Translates geometry by delta
@@ -124,7 +132,6 @@ class Geometry(object):
 
         with self.case.mutable_data_file(FileName.SURFACE_FEATURE_EXTRACT) as d:
             d.update(surface_extract_dict)
-
         self.case.run_tool('surfaceFeatureExtract')
 
 def load_multiple_geometries(geomType, paths, names, case):
@@ -138,11 +145,21 @@ def load_multiple_geometries(geomType, paths, names, case):
 
     """
     geometries = []
+    surface_extract_dict = {}
     for i in range(len(names)):
         geometries.append(Geometry(geomType,paths[i],names[i],case))
+        geometries[0].case.add_tri_surface(names[i], geometries[i])
+        file_dict = {
+            '{}.stl'.format(names[i]) : {'extractionMethod' : 'extractFromSurface',
+                                      'extractFromSurfaceCoeffs' : {'includedAngle' : 180},
+                                      'writeObj' : 'yes'}
+        }
+        surface_extract_dict.update(file_dict)
+    with geometries[0].case.mutable_data_file(FileName.SURFACE_FEATURE_EXTRACT) as d:
+        d.update(surface_extract_dict)
+    geometries[0].case.run_tool('surfaceFeatureExtract')
 
     return geometries
-
 
 def _erase_attr(o, attr):
     """Delete the attribute *attr* from *o* but only if present."""
