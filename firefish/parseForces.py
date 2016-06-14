@@ -1,8 +1,9 @@
 #!/usr/bin/python                                                                                                                                                                                                                     
-import pylab
 import numpy
 import matplotlib
 import re
+
+from matplotlib import pyplot as plt
 
 #Current Input
 #1.000000e+00    ((1.460676e+04 -1.948520e+02 9.535164e+02) (2.508036e-02 -6.720399e-05 -3.082446e-04) (0.000000e+00 0.000000e+00 0.000000e+00)) ((1.140514e+04 1.153182e+05 -1.730316e+05) (-3.153913e-03 1.658614e-01 -2.916495e-01\
@@ -10,52 +11,60 @@ import re
 
 forceRegex=r"([0-9.Ee\-+]+)\s+\(+([0-9.Ee\-+]+)\s([0-9.Ee\-+]+)\s([0-9.Ee\-+]+)+\)+\s+\(+([0-9.Ee\-+]+)"
 
-#change this to use real forces, negative to get positive numbers
-scaling = -10000
+#scale to real forces, negative to get positive numbers
+rhoNorm = 1.4
+rhoReal = 1.13
+vNorm = 1.1 
+vReal = 345
+scaling = -(rhoReal/rhoNorm) * (vReal/vNorm)**2
 
+#setup arrays
 t = []
-fpx = []; fpy = []; fpz = []; #Pressure                                                                                                                                                                                               
+fpx = []; fpy = []; fpz = []; #Pressure
+fpx1 = []; fpy1 = []; fpz1 = []; #Pressure                                                                                                                                                                                                                                                                                                                                                                                              
 fvx = []; fvy = []; fvz = []; #Viscous                                                                                                                                                                                                
 fpox = []; fpoy = []; fpoz=[];#Porous                                                                                                                                                                                                 
 mpx = []; mpy = []; mpz = []; #Moment Pressure                                                                                                                                                                                        
 mvx = []; mvy = []; mvz = []; #Moment Viscous                                                                                                                                                                                         
 mpox= []; mpoy = [];mpoz = [];#Moment Porous                                                                                                                                                                                          
 
-pipefile=open('separation/M1p1_1206/forces1/forces_0.03502.dat','r')
+#read the .dat files
+pipefileDart=open('separation/M1p1_1206/coreDartSeparation/postProcessing/forces3/0.095/forces.dat','r')
+pipefileCore=open('separation/M1p1_1206/coreDartSeparation/postProcessing/forces2/0.095/forces.dat','r')
 
-lines = pipefile.readlines()
+linesDart = pipefileDart.readlines()
+linesCore = pipefileCore.readlines()
 
-lth=len(lines);print(lth)
+#iterate through to match to the forceRegex pattern
+lth=len(linesDart);print(lth)
 
-for i in xrange(0, lth, lth/100):
-	
-	match=re.search(forceRegex, lines[i])
-
+for i in xrange(0, lth, lth/200):
+	match=re.search(forceRegex, linesDart[i])
 	if match:
 		t.append(float(match.group(1)))
 		fpx.append(float(match.group(2)))
 		fpy.append(float(match.group(3)))
 		fpz.append(float(match.group(4)))
-#       fvx.append(float(match.group(5)))
-#       fvy.append(float(match.group(6)))
-#       fvz.append(float(match.group(7)))
-#       fpox.append(float(match.group(8)))
-#       fpoy.append(float(match.group(9)))
-#       fpoz.append(float(match.group(10)))
-#       mpx.append(float(match.group(11)))
-#       mpy.append(float(match.group(12)))
-#       mpz.append(float(match.group(13)))
-#       mvx.append(float(match.group(14)))
-#       mvy.append(float(match.group(15)))
-#       mvz.append(float(match.group(16)))
-#       mpox.append(float(match.group(17)))
-#       mpoy.append(float(match.group(18)))
-#       mpoz.append(float(match.group(19)))
 
-pylab.xlabel('time (sec)')
-pylab.ylabel('force (N)')
-pylab.grid(True)
+	match1=re.search(forceRegex, linesCore[i])
+	if match1:
+		fpx1.append(float(match1.group(2)))
+		fpy1.append(float(match1.group(3)))
+		fpz1.append(float(match1.group(4)))
 
-#title('Example of using python to parse the force/moment tuples')                                                                                                                                                                    
-pylab.plot(t,fpy,'o-')
-pylab.show()
+#scale the arrays, find the separation force
+fpy = [x * scaling for x in fpy]
+fpy1 = [x * scaling for x in fpy1]
+sep = numpy.subtract(fpy1, fpy)
+
+#plot the forces
+plt.figure()
+plt.xlabel('Simulation time (sec)')
+plt.ylabel('Drag force (N)')
+plt.plot(t, fpy,'g', label = "Fin")
+#plt.plot(t, fpy1,'b', label = "Core")
+#plt.plot(t, sep, 'c', label = "Separation Force")
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+          ncol=3, fancybox=True, shadow=True)
+output = "separation-force.pdf"
+plt.savefig(output, format='PDF')
