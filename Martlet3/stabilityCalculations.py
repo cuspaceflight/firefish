@@ -25,9 +25,9 @@ from subprocess import call
 part_list = ['coreDart']
 path_list = ['STLS/dartCore.stl'] 
 
-timeStep = 1e-7
-endTime = 0.10
-interval = 100000*timeStep
+timeStep = 2e-5
+endTime = 1.0
+interval = 0.1
 processors = 4
 streamVelocity = 1.1
 angle_of_attack = math.radians(5)
@@ -63,7 +63,8 @@ def main(case_dir='coreDartStability', runRhoCentral = False, parallel = True):
 	write_initial_conditions(case)
 	write_decompose_settings(case, processors, "simple")
 	snap.generate_mesh()
-	#getTrueMesh(case)
+#  	case.run_tool('snappyHexMesh')
+#	getTrueMesh(case)
 #	if runRhoCentral:
 #		if parallel:
 #  			case.run_tool('decomposePar')
@@ -126,7 +127,7 @@ def write_control_dict(case):
 				'rhoName': 'rhoInf',
 				'rhoInf':4.7,
 				#distance to nosecone:
-				'CofR':[0, 0, 0],
+				'CofR':[0, 0.5, 0],
 			},
 		}
 	}
