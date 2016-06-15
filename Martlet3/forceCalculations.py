@@ -29,13 +29,13 @@ timeStep = 1e-7
 endTime = 0.10
 interval = 10000*timeStep
 processors = 4
-streamVelocity = 1.1
+streamVelocity = 4
 angle_of_attack = math.radians(0)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
 #####simulation parameters#######
 
-def main(case_dir='coreDartSeparation', runRhoCentral = False, parallel = True):
+def main(case_dir='coreDartSeparationM4', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -63,13 +63,13 @@ def main(case_dir='coreDartSeparation', runRhoCentral = False, parallel = True):
 	write_initial_conditions(case)
 	write_decompose_settings(case, processors, "simple")
 	snap.generate_mesh()
-	#getTrueMesh(case)
-	if runRhoCentral:
-		if parallel:
-  			case.run_tool('decomposePar')
-			case.run_tool('mpirun', '-np 4 rhoCentralFoam -parallel')
-  		else:
-  			case.run_tool('rhoCentralFoam')
+#	#getTrueMesh(case)
+#	if runRhoCentral:
+#		if parallel:
+#  			case.run_tool('decomposePar')
+#			case.run_tool('mpirun', '-np 4 rhoCentralFoam -parallel')
+#  		else:
+#  			case.run_tool('rhoCentralFoam')
 
 def getTrueMesh(case):
 	#the proper mesh is in the final time directory, delete the one in constant
@@ -119,7 +119,7 @@ def write_control_dict(case):
 		#forces given in body co-ordinates
 		'functions': {
 			#dart
-			'forces1':{
+			'forcesDart':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
 				'patches':part_list[0:1],
@@ -128,7 +128,7 @@ def write_control_dict(case):
 				'CofR':[0, 0, 0],
 			},
 			##core
-			'forces2':{
+			'forcesCore':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
 				'patches':part_list[1:2],
@@ -137,10 +137,46 @@ def write_control_dict(case):
 				'CofR':[0, 0, 0],
 			},
 			#fin
-			'forces3':{
+			'forcesboatTail':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[2:3],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			#fin
+			'forcesFin1':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
 				'patches':part_list[3:4],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			#fin
+			'forcesFin2':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[4:5],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			#fin
+			'forcesFin3':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[5:6],
+				'rhoName': 'rhoInf',
+				'rhoInf':4.7,
+				'CofR':[0, 0, 0],
+			},
+			#fin
+			'forcesFin4':{
+				'type': 'forces',
+				'functionObjectLibs' : ['"libforces.so"'],
+				'patches':part_list[6:7],
 				'rhoName': 'rhoInf',
 				'rhoInf':4.7,
 				'CofR':[0, 0, 0],
