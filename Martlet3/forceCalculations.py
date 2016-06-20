@@ -424,7 +424,6 @@ def write_initial_conditions(case):
 			'internalField': ('uniform', 0.0503),
 			'boundaryField': boundaryDict
 		})
-	
 	#write epsilon boundary conditions
 	EPSILON_file = case.mutable_data_file(
 		'0/epsilon', create_class=FileClass.SCALAR_FIELD_3D
@@ -446,7 +445,47 @@ def write_initial_conditions(case):
 			'internalField': ('uniform', 2.67),
 			'boundaryField': boundaryDict
 		})
-
+	#write turbulent viscosity (nut) boundary conditions
+	NUT_file = case.mutable_data_file(
+		'0/nut', create_class=FileClass.SCALAR_FIELD_3D
+	)
+	partBoundaries = {}
+	for part in part_list:
+		partDict = {part:{'type':'nutkWallFunction', 'value':('uniform 0')}}
+		partBoundaries.update(partDict)
+	boundaryDict = {
+		'inlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
+		'outlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
+		'fixedWalls' : {'type' : 'calculated', 'value' : ('uniform 0')},
+	}
+	boundaryDict.update(partBoundaries)
+	with NUT_file as NUT:
+		NUT.update({
+			'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
+			'internalField': ('uniform', 0),
+			'boundaryField': boundaryDict
+		})
+	
+	#write alphat boundary conditions
+	NUT_file = case.mutable_data_file(
+		'0/nut', create_class=FileClass.SCALAR_FIELD_3D
+	)
+	partBoundaries = {}
+	for part in part_list:
+		partDict = {part:{'type':'nutkWallFunction', 'value':('uniform 0')}}
+		partBoundaries.update(partDict)
+	boundaryDict = {
+		'inlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
+		'outlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
+		'fixedWalls' : {'type' : 'calculated', 'value' : ('uniform 0')},
+	}
+	boundaryDict.update(partBoundaries)
+	with NUT_file as NUT:
+		NUT.update({
+			'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
+			'internalField': ('uniform', 0),
+			'boundaryField': boundaryDict
+		})
 
 if __name__ == '__main__':
 	main()
