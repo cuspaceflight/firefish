@@ -239,7 +239,9 @@ def write_fv_solution(case):
 				'relTol' : 0.01
 			},
 			'"(h|e)"' : {
-				'$U' : ' ',
+				'solver'  : 'smoothSolver',
+				'smoother' : 'GaussSeidel',
+				'nSweeps' : 2,
 				'tolerance' : 1e-10,
 				'relTol' : 0
 			},
@@ -430,7 +432,7 @@ def write_initial_conditions(case):
 	)
 	partBoundaries = {}
 	for part in part_list:
-		partDict = {part:{'type':'epsilonWallFunctions', 'value':('uniform 2.67')}}
+		partDict = {part:{'type':'epsilonWallFunction', 'value':('uniform 2.67')}}
 		partBoundaries.update(partDict)
 
 	boundaryDict = {
@@ -487,7 +489,7 @@ def write_initial_conditions(case):
 	boundaryDict.update(partBoundaries)
 	with ALPHAT_file as ALPHAT:
 		ALPHAT.update({
-			'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
+			'dimensions': Dimension(1, -1, -1, 0, 0, 0, 0),
 			'internalField': ('uniform', 0),
 			'boundaryField': boundaryDict
 		})
