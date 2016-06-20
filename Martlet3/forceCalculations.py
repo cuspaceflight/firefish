@@ -403,7 +403,6 @@ def write_initial_conditions(case):
 			'internalField': ('uniform', 1),
 			'boundaryField': boundaryDict
 		})
-
 	#write k boundary conditions
 	K_file = case.mutable_data_file(
 		'0/k', create_class=FileClass.SCALAR_FIELD_3D
@@ -423,6 +422,28 @@ def write_initial_conditions(case):
 		K.update({
 			'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
 			'internalField': ('uniform', 0.0503),
+			'boundaryField': boundaryDict
+		})
+	
+	#write epsilon boundary conditions
+	EPSILON_file = case.mutable_data_file(
+		'0/epsilon', create_class=FileClass.SCALAR_FIELD_3D
+	)
+	partBoundaries = {}
+	for part in part_list:
+		partDict = {part:{'type':'epsilonWallFunctions', 'value':('uniform 2.67')}}
+		partBoundaries.update(partDict)
+
+	boundaryDict = {
+		'inlet' : {'type' : 'fixedValue', 'value' : ('uniform 2.67')},
+		'outlet': {'type': 'zeroGradient'},
+		'fixedWalls': {'type': 'zeroGradient'}
+	}
+	boundaryDict.update(partBoundaries)
+	with EPSILON_file as EPSILON:
+		EPSILON.update({
+			'dimensions': Dimension(0, 2, -3, 0, 0, 0, 0),
+			'internalField': ('uniform', 2.67),
 			'boundaryField': boundaryDict
 		})
 
