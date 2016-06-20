@@ -296,7 +296,7 @@ def write_thermophysical_properties(case):
 						'energy' : 'sensibleInternalEnergy'},
 		'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
 					  'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
-					  'transport' : {'mu' : 0, 'Pr' : 1}}}
+					  'transport' : {'mu' : 5.45e-08, 'Pr' : 1}}}
 	with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
 		d.update(thermo_dict)
 
