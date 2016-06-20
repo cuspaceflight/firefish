@@ -282,6 +282,7 @@ def write_fv_schemes(case):
 								  'reconstruct(U)' : 'vanLeerV',
 								  'reconstruct(T)': 'vanLeer'},
 		'snGradSchemes' : {'default': 'corrected'}}
+	
 	with case.mutable_data_file(FileName.FV_SCHEMES) as d:
 		d.update(fv_schemes)
 
@@ -297,13 +298,21 @@ def write_thermophysical_properties(case):
 		'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
 					  'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
 					  'transport' : {'mu' : 5.45e-08, 'Pr' : 1}}}
+	
 	with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
 		d.update(thermo_dict)
 
 def write_turbulence_properties(case):
 	"""Disables the turbulent solver"""
 	turbulence_dict = {
-		'simulationType' : 'laminar'}
+		'simulationType' : 'RAS',
+		'RAS' : {
+			'RASModel' : 'kEpsilon',
+			'turbulence' : 'on',
+			'printCoeffs' : 'on'
+		}
+	}
+	
 	with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
 		d.update(turbulence_dict)
 
@@ -315,7 +324,6 @@ def write_decompose_settings(case, processors, scheme):
 		'distributed' : 'no',
 		'roots' : [],
 	}
-
 	if scheme == "scotch":	
 		decomposepar_dict.update({'method': 'scotch'})
 	if scheme == "simple":
@@ -324,7 +332,6 @@ def write_decompose_settings(case, processors, scheme):
 			'simpleCoeffs' : {'n' : "(2 1 2)", 'delta' : 0.001}
 		}
 		decomposepar_dict.update(simpleCoeffs)
-
 	with case.mutable_data_file(FileName.DECOMPOSE) as d:
 		d.update(decomposepar_dict)
 
@@ -396,6 +403,29 @@ def write_initial_conditions(case):
 			'internalField': ('uniform', 1),
 			'boundaryField': boundaryDict
 		})
+
+	#write k boundary conditions
+	K_file = case.mutable_data_file(
+		'0/k', create_class=FileClass.SCALAR_FIELD_3D
+	)
+	partBoundaries = {}
+	for part in part_list:
+		partDict = {part:{'type':'kqRWallFunction', 'value':('uniform 0.0503')}}
+		partBoundaries.update(partDict)
+
+	boundaryDict = {
+		'inlet' : {'type' : 'fixedValue', 'value' : ('uniform 0.0503')},
+		'outlet': {'type': 'zeroGradient'},
+		'fixedWalls': {'type': 'zeroGradient'}
+	}
+	boundaryDict.update(partBoundaries)
+	with K_file as K:
+		K.update({
+			'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
+			'internalField': ('uniform', 0.0503),
+			'boundaryField': boundaryDict
+		})
+
 
 if __name__ == '__main__':
 	main()
