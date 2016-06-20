@@ -11,16 +11,6 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-#02_06_16
-##plan for determining the number of forces
-#the write control dict function is called with a list where the user 
-#gives the components that they want to have the forces calculated for
-#for each member of this list, the function finds the index of
-#the component in part_list, and then writes a member of the dictionary
-#with this index (and index + 1).
-##increase temperature so that there is less of a chance of negative temp when
-#viscosity is added?
-
 ###simulation parameters#####
 part_list = ['dart', 'core', 'boatTail', 'fin1', 'fin2', 'fin3', 'fin4']
 path_list = ['STLS/dart.stl', 'STLS/core.stl', 'STLS/boatTail.stl', 'STLS/fin1.stl', 'STLS/fin2.stl', 'STLS/fin3.stl', 'STLS/fin4.stl'] 
@@ -35,7 +25,7 @@ vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
 #####simulation parameters#######
 
-def main(case_dir='coreDartSeparationM4', runRhoCentral = False, parallel = True):
+def main(case_dir='turblenceTest', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -239,15 +229,34 @@ def make_block_mesh(case):
 def write_fv_solution(case):
 	"""Sets fv_solution"""
 	fv_solution = {
-		'solvers' : {'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
-					 'U' : {'solver'  : 'smoothSolver',
-							'smoother' : 'GaussSeidel',
-							'nSweeps' : 2,
-							'tolerance' : 1e-09,
-							'relTol' : 0.01},
-					 'h' : {'$U' : ' ',
-							'tolerance' : 1e-10,
-							'relTol' : 0}}}
+		'solvers' : {
+			'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
+			'U' : {
+				'solver'  : 'smoothSolver',
+				'smoother' : 'GaussSeidel',
+				'nSweeps' : 2,
+				'tolerance' : 1e-09,
+				'relTol' : 0.01
+			},
+			'"(h|e)"' : {
+				'$U' : ' ',
+				'tolerance' : 1e-10,
+				'relTol' : 0
+			},
+			'k' : {
+				'solver' : 'PBiCG',
+				'preconditioner': 'DILU',
+				'tolerance': 1e-05,
+				'relTol' : 0.1				
+			},
+			'epsilon' : {
+				'solver' : 'PBiCG',
+				'preconditioner': 'DILU',
+				'tolerance': 1e-05,
+				'relTol' : 0.1				
+			}			
+		}
+	}
 	with case.mutable_data_file(FileName.FV_SOLUTION) as d:
 		d.update(fv_solution)
 
@@ -256,7 +265,17 @@ def write_fv_schemes(case):
 	fv_schemes = {
 		'ddtSchemes'  : {'default' : 'Euler'},
 		'gradSchemes' : {'default' : 'leastSquares'},
-		'divSchemes'  : {'default' : 'Gauss skewCorrected', 'div(tauMC)' : 'Gauss linear'},
+		'divSchemes'  : {
+			'default' : 'Gauss skewCorrected', 
+			'div(tauMC)' : 'Gauss linear',
+			'div(phi,U)'   :   'bounded Gauss upwind',
+			'div(phi,k)'   :   'bounded Gauss upwind',
+			'div(phi,epsilon)' : 'bounded Gauss upwind',
+			'div(phi,R)'   :   'bounded Gauss upwind',
+			'div(R)'       :   'Gauss linear',
+			'div(phi,nuTilda)' : 'bounded Gauss upwind',
+			'div((nuEff*dev(T(grad(U)))))' : 'Gauss linear'
+		},
 		'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
 		'interpolationSchemes' : {'default' : 'linear skewCorrected',
 								  'reconstruct(rho)' : 'vanLeer',
