@@ -467,12 +467,17 @@ def write_initial_conditions(case):
 		})
 	
 	#write alphat boundary conditions
-	NUT_file = case.mutable_data_file(
-		'0/nut', create_class=FileClass.SCALAR_FIELD_3D
+	ALPHAT_file = case.mutable_data_file(
+		'0/alphat', create_class=FileClass.SCALAR_FIELD_3D
 	)
 	partBoundaries = {}
 	for part in part_list:
-		partDict = {part:{'type':'nutkWallFunction', 'value':('uniform 0')}}
+		partDict = {
+					part:{
+						'type':'compressible::alphatWallFunction', 
+						'value':('uniform 0'), 
+						'Prt' : 0.85}
+					}
 		partBoundaries.update(partDict)
 	boundaryDict = {
 		'inlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
@@ -480,9 +485,9 @@ def write_initial_conditions(case):
 		'fixedWalls' : {'type' : 'calculated', 'value' : ('uniform 0')},
 	}
 	boundaryDict.update(partBoundaries)
-	with NUT_file as NUT:
-		NUT.update({
-			'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
+	with ALPHAT_file as ALPHAT:
+		ALPHAT.update({
+			'dimensions': Dimension(0, 1, -1, 0, 0, 0, 0),
 			'internalField': ('uniform', 0),
 			'boundaryField': boundaryDict
 		})
