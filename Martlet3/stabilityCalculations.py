@@ -11,21 +11,31 @@ from firefish.geometry import (
 from firefish.meshsnappy import SnappyHexMesh
 from subprocess import call
 
-###simulation parameters#####
-part_list = ['dart', 'core', 'boatTail', 'fin1', 'fin2', 'fin3', 'fin4']
-path_list = ['STLS/dart.stl', 'STLS/core.stl', 'STLS/boatTail.stl', 'STLS/fin1.stl', 'STLS/fin2.stl', 'STLS/fin3.stl', 'STLS/fin4.stl'] 
+#02_06_16
+##plan for determining the number of forces
+#the write control dict function is called with a list where the user 
+#gives the components that they want to have the forces calculated for
+#for each member of this list, the function finds the index of
+#the component in part_list, and then writes a member of the dictionary
+#with this index (and index + 1).
+##increase temperature so that there is less of a chance of negative temp when
+#viscosity is added?
 
-timeStep = 1e-7
-endTime = 0.10
-interval = 10000*timeStep
+###simulation parameters#####
+part_list = ['coreDart']
+path_list = ['STLS/dartCore.stl'] 
+
+timeStep = 2e-5
+endTime = 1.0
+interval = 0.1
 processors = 4
-streamVelocity = 4
-angle_of_attack = math.radians(0)
+streamVelocity = 1.1
+angle_of_attack = math.radians(5)
 vy = streamVelocity * math.cos(angle_of_attack)
 vx = streamVelocity * math.sin(angle_of_attack)
 #####simulation parameters#######
 
-def main(case_dir='turblenceTest', runRhoCentral = False, parallel = True):
+def main(case_dir='coreDartStability', runRhoCentral = False, parallel = True):
 	#Create a new case file, raise an error if the directory already exists
 	case = create_new_case(case_dir)
 	write_control_dict(case)
@@ -53,7 +63,8 @@ def main(case_dir='turblenceTest', runRhoCentral = False, parallel = True):
 	write_initial_conditions(case)
 	write_decompose_settings(case, processors, "simple")
 	snap.generate_mesh()
-#	#getTrueMesh(case)
+#  	case.run_tool('snappyHexMesh')
+#	getTrueMesh(case)
 #	if runRhoCentral:
 #		if parallel:
 #  			case.run_tool('decomposePar')
@@ -108,68 +119,15 @@ def write_control_dict(case):
 		#function objects for calculating drag coefficients with the simulation
 		#forces given in body co-ordinates
 		'functions': {
-			#dart
-			'forcesDart':{
+			#whole
+			'forces1':{
 				'type': 'forces',
 				'functionObjectLibs' : ['"libforces.so"'],
 				'patches':part_list[0:1],
 				'rhoName': 'rhoInf',
 				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			##core
-			'forcesCore':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[1:2],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			#fin
-			'forcesboatTail':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[2:3],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			#fin
-			'forcesFin1':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[3:4],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			#fin
-			'forcesFin2':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[4:5],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			#fin
-			'forcesFin3':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[5:6],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
-			},
-			#fin
-			'forcesFin4':{
-				'type': 'forces',
-				'functionObjectLibs' : ['"libforces.so"'],
-				'patches':part_list[6:7],
-				'rhoName': 'rhoInf',
-				'rhoInf':4.7,
-				'CofR':[0, 0, 0],
+				#distance to nosecone:
+				'CofR':[0, 0.5, 0],
 			},
 		}
 	}
@@ -229,36 +187,15 @@ def make_block_mesh(case):
 def write_fv_solution(case):
 	"""Sets fv_solution"""
 	fv_solution = {
-		'solvers' : {
-			'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
-			'U' : {
-				'solver'  : 'smoothSolver',
-				'smoother' : 'GaussSeidel',
-				'nSweeps' : 2,
-				'tolerance' : 1e-09,
-				'relTol' : 0.01
-			},
-			'"(h|e)"' : {
-				'solver'  : 'smoothSolver',
-				'smoother' : 'GaussSeidel',
-				'nSweeps' : 2,
-				'tolerance' : 1e-10,
-				'relTol' : 0
-			},
-			'k' : {
-				'solver' : 'PBiCG',
-				'preconditioner': 'DILU',
-				'tolerance': 1e-05,
-				'relTol' : 0.1				
-			},
-			'epsilon' : {
-				'solver' : 'PBiCG',
-				'preconditioner': 'DILU',
-				'tolerance': 1e-05,
-				'relTol' : 0.1				
-			}			
-		}
-	}
+		'solvers' : {'"(rho|rhoU|rhoE)"': {'solver' : 'diagonal'},
+					 'U' : {'solver'  : 'smoothSolver',
+							'smoother' : 'GaussSeidel',
+							'nSweeps' : 2,
+							'tolerance' : 1e-09,
+							'relTol' : 0.01},
+					 'h' : {'$U' : ' ',
+							'tolerance' : 1e-10,
+							'relTol' : 0}}}
 	with case.mutable_data_file(FileName.FV_SOLUTION) as d:
 		d.update(fv_solution)
 
@@ -267,24 +204,13 @@ def write_fv_schemes(case):
 	fv_schemes = {
 		'ddtSchemes'  : {'default' : 'Euler'},
 		'gradSchemes' : {'default' : 'leastSquares'},
-		'divSchemes'  : {
-			'default' : 'Gauss skewCorrected', 
-			'div(tauMC)' : 'Gauss linear',
-			'div(phi,U)'   :   'bounded Gauss upwind',
-			'div(phi,k)'   :   'bounded Gauss upwind',
-			'div(phi,epsilon)' : 'bounded Gauss upwind',
-			'div(phi,R)'   :   'bounded Gauss upwind',
-			'div(R)'       :   'Gauss linear',
-			'div(phi,nuTilda)' : 'bounded Gauss upwind',
-			'div((nuEff*dev(T(grad(U)))))' : 'Gauss linear'
-		},
+		'divSchemes'  : {'default' : 'Gauss skewCorrected', 'div(tauMC)' : 'Gauss linear'},
 		'laplacianSchemes' : {'default' : 'Gauss linear corrected'},
 		'interpolationSchemes' : {'default' : 'linear skewCorrected',
 								  'reconstruct(rho)' : 'vanLeer',
 								  'reconstruct(U)' : 'vanLeerV',
 								  'reconstruct(T)': 'vanLeer'},
 		'snGradSchemes' : {'default': 'corrected'}}
-	
 	with case.mutable_data_file(FileName.FV_SCHEMES) as d:
 		d.update(fv_schemes)
 
@@ -299,22 +225,14 @@ def write_thermophysical_properties(case):
 						'energy' : 'sensibleInternalEnergy'},
 		'mixture' : {'specie' : {'nMoles' : 1, 'molWeight' : 11640.3},
 					  'thermodynamics' : {'Cp' : 2.5, 'Hf' : 0},
-					  'transport' : {'mu' : 5.45e-08, 'Pr' : 1}}}
-	
+					  'transport' : {'mu' : 0, 'Pr' : 1}}}
 	with case.mutable_data_file(FileName.THERMOPHYSICAL_PROPERTIES) as d:
 		d.update(thermo_dict)
 
 def write_turbulence_properties(case):
 	"""Disables the turbulent solver"""
 	turbulence_dict = {
-		'simulationType' : 'RAS',
-		'RAS' : {
-			'RASModel' : 'kEpsilon',
-			'turbulence' : 'on',
-			'printCoeffs' : 'on'
-		}
-	}
-	
+		'simulationType' : 'laminar'}
 	with case.mutable_data_file(FileName.TURBULENCE_PROPERTIES) as d:
 		d.update(turbulence_dict)
 
@@ -326,6 +244,7 @@ def write_decompose_settings(case, processors, scheme):
 		'distributed' : 'no',
 		'roots' : [],
 	}
+
 	if scheme == "scotch":	
 		decomposepar_dict.update({'method': 'scotch'})
 	if scheme == "simple":
@@ -334,6 +253,7 @@ def write_decompose_settings(case, processors, scheme):
 			'simpleCoeffs' : {'n' : "(2 1 2)", 'delta' : 0.001}
 		}
 		decomposepar_dict.update(simpleCoeffs)
+
 	with case.mutable_data_file(FileName.DECOMPOSE) as d:
 		d.update(decomposepar_dict)
 
@@ -403,94 +323,6 @@ def write_initial_conditions(case):
 		T.update({
 			'dimensions': Dimension(0, 0, 0, 1, 0, 0, 0),
 			'internalField': ('uniform', 1),
-			'boundaryField': boundaryDict
-		})
-	#write k boundary conditions
-	K_file = case.mutable_data_file(
-		'0/k', create_class=FileClass.SCALAR_FIELD_3D
-	)
-	partBoundaries = {}
-	for part in part_list:
-		partDict = {part:{'type':'kqRWallFunction', 'value':('uniform 0.0503')}}
-		partBoundaries.update(partDict)
-
-	boundaryDict = {
-		'inlet' : {'type' : 'fixedValue', 'value' : ('uniform 0.0503')},
-		'outlet': {'type': 'zeroGradient'},
-		'fixedWalls': {'type': 'zeroGradient'}
-	}
-	boundaryDict.update(partBoundaries)
-	with K_file as K:
-		K.update({
-			'dimensions': Dimension(0, 2, -2, 0, 0, 0, 0),
-			'internalField': ('uniform', 0.0503),
-			'boundaryField': boundaryDict
-		})
-	#write epsilon boundary conditions
-	EPSILON_file = case.mutable_data_file(
-		'0/epsilon', create_class=FileClass.SCALAR_FIELD_3D
-	)
-	partBoundaries = {}
-	for part in part_list:
-		partDict = {part:{'type':'epsilonWallFunction', 'value':('uniform 2.67')}}
-		partBoundaries.update(partDict)
-
-	boundaryDict = {
-		'inlet' : {'type' : 'fixedValue', 'value' : ('uniform 2.67')},
-		'outlet': {'type': 'zeroGradient'},
-		'fixedWalls': {'type': 'zeroGradient'}
-	}
-	boundaryDict.update(partBoundaries)
-	with EPSILON_file as EPSILON:
-		EPSILON.update({
-			'dimensions': Dimension(0, 2, -3, 0, 0, 0, 0),
-			'internalField': ('uniform', 2.67),
-			'boundaryField': boundaryDict
-		})
-	#write turbulent viscosity (nut) boundary conditions
-	NUT_file = case.mutable_data_file(
-		'0/nut', create_class=FileClass.SCALAR_FIELD_3D
-	)
-	partBoundaries = {}
-	for part in part_list:
-		partDict = {part:{'type':'nutkWallFunction', 'value':('uniform 0')}}
-		partBoundaries.update(partDict)
-	boundaryDict = {
-		'inlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
-		'outlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
-		'fixedWalls' : {'type' : 'calculated', 'value' : ('uniform 0')},
-	}
-	boundaryDict.update(partBoundaries)
-	with NUT_file as NUT:
-		NUT.update({
-			'dimensions': Dimension(0, 2, -1, 0, 0, 0, 0),
-			'internalField': ('uniform', 0),
-			'boundaryField': boundaryDict
-		})
-	
-	#write alphat boundary conditions
-	ALPHAT_file = case.mutable_data_file(
-		'0/alphat', create_class=FileClass.SCALAR_FIELD_3D
-	)
-	partBoundaries = {}
-	for part in part_list:
-		partDict = {
-					part:{
-						'type':'compressible::alphatWallFunction', 
-						'value':('uniform 0'), 
-						'Prt' : 0.85}
-					}
-		partBoundaries.update(partDict)
-	boundaryDict = {
-		'inlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
-		'outlet' : {'type' : 'calculated', 'value' : ('uniform 0')},
-		'fixedWalls' : {'type' : 'calculated', 'value' : ('uniform 0')},
-	}
-	boundaryDict.update(partBoundaries)
-	with ALPHAT_file as ALPHAT:
-		ALPHAT.update({
-			'dimensions': Dimension(1, -1, -1, 0, 0, 0, 0),
-			'internalField': ('uniform', 0),
 			'boundaryField': boundaryDict
 		})
 
